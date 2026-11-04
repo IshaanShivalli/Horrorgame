@@ -19,11 +19,17 @@ public sealed class player : MonoBehaviour
     private float experience;
     private crafting crafting;
     private armour armour;
-    private trade trading;
+    private trade shop;
     private GameObject heldTorchLight;
     private float verticalSpeed;
+    private Vector3 knockbackVelocity;
     private float yaw;
     private float pitch;
+    private float hungerTimer;
+    private float naturalRegenerationTimer;
+    private bool naturalRegenerationActive;
+    private float potionRegenerationDuration;
+    private float potionRegenerationTimer;
 
     public float Health { get; private set; } = MaxHealth;
     public float Hunger { get; private set; } = MaxHunger;
@@ -40,10 +46,8 @@ public sealed class player : MonoBehaviour
         inventory = GetComponent<inventory>();
         crafting = GetComponent<crafting>();
         armour = GetComponent<armour>();
-        trading = currentWorld.Trading;
-        heldTorchLight = torch.CreateLight(playerCamera.transform, new Vector3(0.25f, -0.22f, 0.45f));
-        heldTorchLight.GetComponent<Light>().intensity = 1.8f;
-        heldTorchLight.GetComponent<Light>().range = 10f;
+        shop = currentWorld.Shop;
+        heldTorchLight = torch.CreateModel(playerCamera.transform, new Vector3(0.25f, -0.22f, 0.45f));
         heldTorchLight.SetActive(false);
     }
 
@@ -66,6 +70,8 @@ public sealed class player : MonoBehaviour
     public void RestoreHealth()
     {
         Health = MaxHealth;
+        naturalRegenerationActive = false;
+        naturalRegenerationTimer = 0f;
     }
 
     public void AddExperience(float amount)
@@ -86,6 +92,11 @@ public sealed class player : MonoBehaviour
         verticalSpeed = 0f;
     }
 
+    public void ApplyKnockback(Vector3 impulse)
+    {
+        knockbackVelocity += impulse;
+    }
+
     private void Update()
     {
         if (Keyboard.current == null || Mouse.current == null)
@@ -102,8 +113,8 @@ public sealed class player : MonoBehaviour
 
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            if (trading != null && trading.IsOpen)
-                trading.Close();
+            if (shop != null && shop.IsOpen)
+                shop.Close();
             else
             if (world.IsPaused)
                 world.ResumeGame();
@@ -119,17 +130,19 @@ public sealed class player : MonoBehaviour
         if (world.IsPaused)
             return;
 
-        if (trading == null)
-            trading = world.Trading;
+        UpdateSurvival(Time.deltaTime);
 
-        if (Keyboard.current.bKey.wasPressedThisFrame && trading != null)
-            trading.Toggle();
+        if (shop == null)
+            shop = world.Shop;
+
+        if (Keyboard.current.bKey.wasPressedThisFrame && shop != null)
+            shop.Toggle();
 
         if (Keyboard.current.oKey.wasPressedThisFrame && armour != null &&
             armour.EquipOwnedItems())
-            world.InteractionStatus = "Equipped available leather armour";
+            world.InteractionStatus = "Equipped available armor";
 
-        if (trading != null && trading.IsOpen)
+        if (shop != null && shop.IsOpen)
             return;
 
         if (Keyboard.current.iKey.wasPressedThisFrame)
@@ -204,7 +217,12 @@ public sealed class player : MonoBehaviour
 
         Vector3 velocity = direction * speed;
         velocity.y = verticalSpeed;
+        velocity += knockbackVelocity;
         controller.Move(velocity * Time.deltaTime);
+        knockbackVelocity = Vector3.MoveTowards(
+            knockbackVelocity,
+            Vector3.zero,
+            10f * Time.deltaTime);
         world.HandleBlockInput();
     }
 
@@ -217,5 +235,65 @@ public sealed class player : MonoBehaviour
         bool hasSelectedTorch = inventory.GetItemType(selectedSlot) == ItemTypes.Torch &&
             inventory.GetAmount(selectedSlot) > 0;
         heldTorchLight.SetActive(hasSelectedTorch && !IsDead);
+    }
+
+    public bool TryEatCookedMeat()
+    {
+        if (Hunger >= MaxHunger || !inventory.TryUseSelected())
+            return false;
+
+        Hunger = Mathf.Min(MaxHunger, Hunger + 8f);
+        return true;
+    }
+
+    public bool TryDrinkRegenerationPotion()
+    {
+        if (!inventory.TryUseSelected())
+            return false;
+
+        potionRegenerationDuration = 15f;
+        potionRegenerationTimer = 0f;
+        return true;
+    }
+
+    private void UpdateSurvival(float deltaTime)
+    {
+        hungerTimer += deltaTime * (Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed ? 3f : 1f);
+        if (hungerTimer >= 120f)
+        {
+            hungerTimer -= 120f;
+            Hunger = Mathf.Max(0f, Hunger - 1f);
+        }
+
+        if (Hunger >= MaxHunger && Health <= MaxHealth - 2f)
+            naturalRegenerationActive = true;
+
+        if (naturalRegenerationActive && Hunger >= MaxHunger && Health < MaxHealth)
+        {
+            naturalRegenerationTimer += deltaTime;
+            if (naturalRegenerationTimer >= 4f)
+            {
+                naturalRegenerationTimer -= 4f;
+                Health = Mathf.Min(MaxHealth, Health + 2f);
+            }
+            if (Health >= MaxHealth)
+                naturalRegenerationActive = false;
+        }
+        else
+        {
+            naturalRegenerationTimer = 0f;
+            naturalRegenerationActive = false;
+        }
+
+        if (potionRegenerationDuration <= 0f)
+            return;
+
+        potionRegenerationDuration = Mathf.Max(0f, potionRegenerationDuration - deltaTime);
+        potionRegenerationTimer += deltaTime;
+        if (potionRegenerationTimer >= 1f)
+        {
+            potionRegenerationTimer -= 1f;
+            Health = Mathf.Min(MaxHealth, Health + 1f);
+        }
     }
 }

@@ -12,7 +12,7 @@ public sealed class zombies : hostileMob
     protected override float AttackCooldown => 1.3f;
     protected override float MovementSpeed => 1.65f;
     protected override bool CanFly => false;
-    protected override float MaximumStepHeight => 0.35f;
+    protected override float MaximumStepHeight => 1.05f;
     public override string DisplayName => "zombie";
 
     private void Awake()

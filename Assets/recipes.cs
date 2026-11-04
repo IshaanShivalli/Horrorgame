@@ -21,17 +21,35 @@ public static class ItemTypes
     public const int LeatherChestplate = 17;
     public const int LeatherLeggings = 18;
     public const int LeatherBoots = 19;
+    public const int CookedMeat = 20;
+    public const int RegenerationPotion = 21;
+    public const int SplashPotionReverse = 22;
+    public const int SilverHelmet = 23;
+    public const int SilverChestplate = 24;
+    public const int SilverLeggings = 25;
+    public const int SilverBoots = 26;
 
     public static bool IsBlock(int itemType)
     {
-        return itemType >= Grass && itemType <= Planks || itemType == CraftingTable ||
-            itemType == Torch || itemType == SilverOre;
+        return itemType >= Grass && itemType <= Planks ||
+            itemType == CraftingTable || itemType == SilverOre;
+    }
+
+    public static bool IsWorldBlock(int itemType)
+    {
+        return IsBlock(itemType) || itemType == Torch;
     }
 
     public static bool IsTool(int itemType)
     {
         return itemType == WoodenSword || itemType == WoodenAxe ||
             itemType == WoodenPickaxe || itemType == Crossbow;
+    }
+
+    public static bool IsConsumable(int itemType)
+    {
+        return itemType == CookedMeat || itemType == RegenerationPotion ||
+            itemType == SplashPotionReverse;
     }
 
     public static float GetAttackDamage(int itemType)
@@ -92,13 +110,20 @@ public static class ItemTypes
             case WoodenPickaxe: return "Wooden pickaxe";
             case Torch: return "Torch";
             case SilverOre: return "Silver ore";
-            case SilverCoin: return "Silver";
+            case SilverCoin: return "Silver coin";
             case Crossbow: return "Crossbow";
             case SilverArrow: return "Silver arrow";
             case LeatherHelmet: return "Leather helmet";
             case LeatherChestplate: return "Leather chestplate";
             case LeatherLeggings: return "Leather leggings";
             case LeatherBoots: return "Leather boots";
+            case CookedMeat: return "Cooked meat";
+            case RegenerationPotion: return "Regeneration potion";
+            case SplashPotionReverse: return "Splash potion of Reverse";
+            case SilverHelmet: return "Silver helmet";
+            case SilverChestplate: return "Silver chestplate";
+            case SilverLeggings: return "Silver leggings";
+            case SilverBoots: return "Silver boots";
             default: return "Unknown item";
         }
     }

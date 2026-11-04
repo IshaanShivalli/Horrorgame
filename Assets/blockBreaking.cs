@@ -31,6 +31,12 @@ public sealed class blockBreaking : MonoBehaviour
         bool breakHeld = Mouse.current.leftButton.isPressed;
         bool placePressed = Mouse.current.rightButton.wasPressedThisFrame;
 
+        if (placePressed && ItemTypes.IsConsumable(playerInventory.SelectedBlockType))
+        {
+            UseSelectedConsumable();
+            return;
+        }
+
         if (breakHeld && VoxelPhysics.TryGetMobTarget(
             playerCamera,
             playerTransform,
@@ -154,6 +160,35 @@ public sealed class blockBreaking : MonoBehaviour
     {
         if (!world.IsPaused && breakingBlock.HasValue && breakProgress > 0f)
             DrawBreakingEffect();
+    }
+
+    private void UseSelectedConsumable()
+    {
+        int selectedItem = playerInventory.SelectedBlockType;
+        player playerController = playerTransform.GetComponent<player>();
+        if (selectedItem == ItemTypes.CookedMeat)
+        {
+            world.InteractionStatus = playerController.TryEatCookedMeat()
+                ? "Ate cooked meat"
+                : "Hunger is already full";
+            return;
+        }
+
+        if (selectedItem == ItemTypes.RegenerationPotion)
+        {
+            if (playerController.TryDrinkRegenerationPotion())
+                world.InteractionStatus = "Regeneration is active";
+            return;
+        }
+
+        if (selectedItem == ItemTypes.SplashPotionReverse &&
+            playerInventory.TryUseSelected())
+        {
+            int affected = world.ApplyReversePotion(playerTransform.position, 7f, 6f);
+            world.InteractionStatus = affected > 0
+                ? "Nearby enemies are fleeing"
+                : "The potion splashed, but no enemies were nearby";
+        }
     }
 
     private void DrawBreakingEffect()

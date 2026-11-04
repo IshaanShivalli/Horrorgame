@@ -20,6 +20,7 @@ public sealed class inventory : MonoBehaviour
     private readonly int[] itemTypes = new int[SlotCount];
     private readonly int[] amounts = new int[SlotCount];
     private const string SaveKey = "VoxelWorld.Inventory.v1";
+    private static Texture2D itemIconAtlas;
 
     public int SelectedSlot { get; private set; }
     public bool IsOpen { get; private set; }
@@ -63,6 +64,47 @@ public sealed class inventory : MonoBehaviour
                 return true;
         }
         return false;
+    }
+
+    public bool CanAddBatch(int[] types, int[] itemAmounts)
+    {
+        if (types == null || itemAmounts == null || types.Length != itemAmounts.Length)
+            return false;
+
+        int[] available = new int[SlotCount];
+        for (int i = 0; i < SlotCount; i++)
+            available[i] = amounts[i];
+
+        for (int item = 0; item < types.Length; item++)
+        {
+            if (types[item] <= 0 || itemAmounts[item] <= 0)
+                return false;
+
+            int remaining = itemAmounts[item];
+            for (int slot = 0; slot < SlotCount && remaining > 0; slot++)
+            {
+                if (itemTypes[slot] != types[item] || available[slot] >= MaxStackSize)
+                    continue;
+
+                int accepted = Mathf.Min(remaining, MaxStackSize - available[slot]);
+                available[slot] += accepted;
+                remaining -= accepted;
+            }
+
+            for (int slot = 0; slot < SlotCount && remaining > 0; slot++)
+            {
+                if (itemTypes[slot] != 0 || available[slot] != 0)
+                    continue;
+
+                int accepted = Mathf.Min(remaining, MaxStackSize);
+                available[slot] = accepted;
+                remaining -= accepted;
+            }
+
+            if (remaining > 0)
+                return false;
+        }
+        return true;
     }
 
     public bool Add(int itemType, int amount = 1)
@@ -177,6 +219,7 @@ public sealed class inventory : MonoBehaviour
 
     private void Awake()
     {
+        itemIconAtlas = Resources.Load<Texture2D>("textures/item_icons");
         Load();
     }
 
@@ -310,6 +353,20 @@ public sealed class inventory : MonoBehaviour
 
     private static void DrawItemIcon(int itemType, Rect rect)
     {
+        int iconIndex = itemType - 1;
+        if (itemIconAtlas != null && iconIndex >= 0 && iconIndex < 32)
+        {
+            itemIconAtlas.filterMode = FilterMode.Point;
+            itemIconAtlas.wrapMode = TextureWrapMode.Clamp;
+            int column = iconIndex % 8;
+            int row = iconIndex / 8;
+            GUI.DrawTextureWithTexCoords(
+                rect,
+                itemIconAtlas,
+                new Rect(column / 8f, 1f - (row + 1) / 4f, 1f / 8f, 1f / 4f));
+            return;
+        }
+
         Color color;
         switch (itemType)
         {

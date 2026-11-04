@@ -93,7 +93,11 @@ public static class Trees
             hangingAnchor + Vector3.down * 0.55f,
             new Vector3(0.045f, 0.55f, 0.045f),
             currentWorld.TreeBarkMaterial);
-        CreateHangingFigure(treeRoot.transform, hangingAnchor + Vector3.down * 1.15f, currentWorld.HangingBodyMaterial);
+        CreateHangingFigure(
+            treeRoot.transform,
+            hangingAnchor + Vector3.down * 1.15f,
+            hangingDirection,
+            currentWorld.HangingBodyMaterial);
     }
 
     private static void CreateBranch(Transform parent, Vector3 start, Vector3 end, Material material)
@@ -106,31 +110,26 @@ public static class Trees
         branch.transform.localRotation = Quaternion.FromToRotation(Vector3.up, direction.normalized);
     }
 
-    private static void CreateHangingFigure(Transform parent, Vector3 position, Material material)
+    private static void CreateHangingFigure(Transform parent, Vector3 position, Vector3 facingDirection, Material material)
     {
         GameObject figure = new GameObject("Hanging Figure");
         figure.transform.SetParent(parent, false);
         figure.transform.localPosition = position;
+        figure.transform.localRotation = Quaternion.LookRotation(facingDirection, Vector3.up);
         figure.layer = LayerMask.NameToLayer("Ignore Raycast");
 
         CreatePrimitive(figure.transform, PrimitiveType.Cube, "Head",
-            new Vector3(0f, 0.45f, 0f), new Vector3(0.38f, 0.38f, 0.36f), material);
+            new Vector3(0f, 0.43f, 0f), new Vector3(0.44f, 0.44f, 0.44f), material);
         CreatePrimitive(figure.transform, PrimitiveType.Cube, "Torso",
-            new Vector3(0f, -0.1f, 0f), new Vector3(0.5f, 0.42f, 0.4f), material);
-        CreateLimb(figure.transform, new Vector3(-0.2f, -0.22f, 0f), new Vector3(-0.34f, -0.72f, 0f), material);
-        CreateLimb(figure.transform, new Vector3(0.2f, -0.22f, 0f), new Vector3(0.34f, -0.72f, 0f), material);
-        CreateLimb(figure.transform, new Vector3(-0.12f, -0.38f, 0f), new Vector3(-0.19f, -0.92f, 0.03f), material);
-        CreateLimb(figure.transform, new Vector3(0.12f, -0.38f, 0f), new Vector3(0.19f, -0.92f, -0.03f), material);
-    }
-
-    private static void CreateLimb(Transform parent, Vector3 start, Vector3 end, Material material)
-    {
-        Vector3 direction = end - start;
-        GameObject limb = CreatePrimitive(parent, PrimitiveType.Cube, "Hanging Figure Limb",
-            (start + end) * 0.5f,
-            new Vector3(0.19f, direction.magnitude * 0.5f, 0.19f),
-            material);
-        limb.transform.localRotation = Quaternion.FromToRotation(Vector3.up, direction.normalized);
+            new Vector3(0f, -0.12f, 0f), new Vector3(0.56f, 0.64f, 0.38f), material);
+        CreatePrimitive(figure.transform, PrimitiveType.Cube, "Left Arm",
+            new Vector3(-0.4f, -0.18f, 0f), new Vector3(0.22f, 0.68f, 0.24f), material);
+        CreatePrimitive(figure.transform, PrimitiveType.Cube, "Right Arm",
+            new Vector3(0.4f, -0.18f, 0f), new Vector3(0.22f, 0.68f, 0.24f), material);
+        CreatePrimitive(figure.transform, PrimitiveType.Cube, "Left Leg",
+            new Vector3(-0.16f, -0.78f, 0f), new Vector3(0.24f, 0.76f, 0.28f), material);
+        CreatePrimitive(figure.transform, PrimitiveType.Cube, "Right Leg",
+            new Vector3(0.16f, -0.78f, 0f), new Vector3(0.24f, 0.76f, 0.28f), material);
     }
 
     private static GameObject CreatePrimitive(Transform parent, PrimitiveType type, string objectName, Vector3 localPosition, Vector3 localScale, Material material)

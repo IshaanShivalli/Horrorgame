@@ -51,38 +51,46 @@ public static class MobModels
 
     public static void CreateWitch(Transform root, Material skin, Material robe, Material eyes)
     {
-        if (TryCreateImported(root, "witch"))
-            return;
-
-        Part(root, PrimitiveType.Capsule, "Witch body", new Vector3(0f, 0.95f, 0f),
-            new Vector3(0.58f, 0.7f, 0.42f), robe);
-        Part(root, PrimitiveType.Sphere, "Witch head", new Vector3(0f, 1.82f, 0f),
-            new Vector3(0.4f, 0.45f, 0.38f), skin);
-        Part(root, PrimitiveType.Cube, "Witch hat brim", new Vector3(0f, 2.19f, 0f),
-            new Vector3(0.88f, 0.08f, 0.78f), robe);
-        Part(root, PrimitiveType.Cylinder, "Witch hat", new Vector3(0f, 2.42f, 0f),
-            new Vector3(0.2f, 0.34f, 0.2f), robe);
-        Part(root, PrimitiveType.Sphere, "Witch eyes", new Vector3(0f, 1.87f, 0.2f),
-            new Vector3(0.11f, 0.08f, 0.06f), eyes);
-        Part(root, PrimitiveType.Capsule, "Witch arm", new Vector3(0.42f, 1.13f, 0f),
-            new Vector3(0.2f, 0.43f, 0.2f), robe).transform.localRotation = Quaternion.Euler(0f, 0f, -35f);
+        Part(root, PrimitiveType.Capsule, "Witch body", new Vector3(0f, 1f, 0f),
+            new Vector3(0.5f, 0.8f, 0.4f), robe);
+        Part(root, PrimitiveType.Sphere, "Witch head", new Vector3(0f, 1.9f, 0f),
+            new Vector3(0.45f, 0.5f, 0.42f), skin);
+        Part(root, PrimitiveType.Cube, "Witch hat brim", new Vector3(0f, 2.3f, 0f),
+            new Vector3(0.8f, 0.1f, 0.6f), robe);
+        Part(root, PrimitiveType.Cylinder, "Witch hat", new Vector3(0f, 2.6f, 0f),
+            new Vector3(0.15f, 0.4f, 0.15f), robe);
+        Part(root, PrimitiveType.Sphere, "Witch left eye", new Vector3(-0.1f, 1.92f, 0.15f),
+            new Vector3(0.06f, 0.07f, 0.05f), eyes);
+        Part(root, PrimitiveType.Sphere, "Witch right eye", new Vector3(0.1f, 1.92f, 0.15f),
+            new Vector3(0.06f, 0.07f, 0.05f), eyes);
+        Part(root, PrimitiveType.Capsule, "Witch arm", new Vector3(0.35f, 1.2f, 0f),
+            new Vector3(0.18f, 0.4f, 0.18f), robe).transform.localRotation = Quaternion.Euler(0f, 0f, -30f);
+        Part(root, PrimitiveType.Cylinder, "Witch staff", new Vector3(0.55f, 1.1f, 0.05f),
+            new Vector3(0.05f, 0.6f, 0.05f), robe);
+        Part(root, PrimitiveType.Sphere, "Witch staff orb", new Vector3(0.55f, 1.8f, 0.05f),
+            new Vector3(0.18f, 0.18f, 0.18f), eyes);
     }
 
-    public static void CreateGhoul(Transform root, Material hide, Material wings, Material eyes)
+    public static void CreateGhoul(Transform root, Material hide, Material eyes)
     {
-        if (TryCreateImported(root, "ghoul"))
-            return;
-
-        Part(root, PrimitiveType.Sphere, "Ghoul torso", new Vector3(0f, 0f, 0f),
-            new Vector3(0.75f, 0.9f, 0.45f), hide);
-        Part(root, PrimitiveType.Sphere, "Ghoul head", new Vector3(0f, 0.65f, 0.05f),
-            new Vector3(0.5f, 0.48f, 0.44f), hide);
-        Part(root, PrimitiveType.Sphere, "Left wing", new Vector3(-0.8f, 0.13f, -0.02f),
-            new Vector3(0.92f, 0.12f, 0.48f), wings);
-        Part(root, PrimitiveType.Sphere, "Right wing", new Vector3(0.8f, 0.13f, -0.02f),
-            new Vector3(0.92f, 0.12f, 0.48f), wings);
-        Part(root, PrimitiveType.Sphere, "Ghoul eyes", new Vector3(0f, 0.72f, 0.26f),
-            new Vector3(0.14f, 0.09f, 0.055f), eyes);
+        Part(root, PrimitiveType.Capsule, "Ghoul hunched torso", new Vector3(0f, 1.02f, 0f),
+            new Vector3(0.58f, 0.7f, 0.44f), hide);
+        Part(root, PrimitiveType.Sphere, "Ghoul head", new Vector3(0f, 1.82f, 0.08f),
+            new Vector3(0.42f, 0.42f, 0.4f), hide);
+        Part(root, PrimitiveType.Capsule, "Ghoul left arm", new Vector3(-0.47f, 1.12f, 0.05f),
+            new Vector3(0.2f, 0.55f, 0.22f), hide).transform.localRotation =
+            Quaternion.Euler(0f, 0f, 25f);
+        Part(root, PrimitiveType.Capsule, "Ghoul right arm", new Vector3(0.47f, 1.12f, 0.05f),
+            new Vector3(0.2f, 0.55f, 0.22f), hide).transform.localRotation =
+            Quaternion.Euler(0f, 0f, -25f);
+        Part(root, PrimitiveType.Capsule, "Ghoul left leg", new Vector3(-0.17f, 0.42f, 0f),
+            new Vector3(0.23f, 0.48f, 0.25f), hide);
+        Part(root, PrimitiveType.Capsule, "Ghoul right leg", new Vector3(0.17f, 0.42f, 0f),
+            new Vector3(0.23f, 0.48f, 0.25f), hide);
+        Part(root, PrimitiveType.Sphere, "Ghoul left eye", new Vector3(-0.11f, 1.87f, 0.27f),
+            new Vector3(0.075f, 0.07f, 0.045f), eyes);
+        Part(root, PrimitiveType.Sphere, "Ghoul right eye", new Vector3(0.11f, 1.87f, 0.27f),
+            new Vector3(0.075f, 0.07f, 0.045f), eyes);
     }
 
     public static GameObject Part(

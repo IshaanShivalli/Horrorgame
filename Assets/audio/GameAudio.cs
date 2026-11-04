@@ -23,6 +23,22 @@ public sealed class GameAudio : MonoBehaviour
             instance.effectsSource.PlayOneShot(instance.purchaseClip, 0.75f);
     }
 
+    public static void PlayPickup()
+    {
+        if (instance != null && instance.purchaseClip != null)
+            instance.effectsSource.PlayOneShot(instance.purchaseClip, 0.3f);
+    }
+
+    public static void PlayMobSound(AudioSource source, string mobName)
+    {
+        if (source == null || instance == null || instance.attackClip == null)
+            return;
+
+        float basePitch = mobName == "ghoul" ? 0.72f : mobName == "witch" ? 1.15f : 0.9f;
+        source.pitch = basePitch * Random.Range(0.92f, 1.08f);
+        source.PlayOneShot(instance.attackClip, 0.45f);
+    }
+
     public void SetRedMoon(bool isRedMoon)
     {
         AudioClip requested = isRedMoon ? redMoonMusic : normalMusic;

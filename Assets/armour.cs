@@ -2,8 +2,9 @@ using UnityEngine;
 
 public sealed class armour : MonoBehaviour
 {
-    private const string SaveKey = "VoxelWorld.Armour.v1";
-    private const int EquipmentMask = 15;
+    private const string SaveKey = "VoxelWorld.Armour.v2";
+    private const string LegacySaveKey = "VoxelWorld.Armour.v1";
+    private const int EquipmentMask = 255;
     private inventory playerInventory;
     private int equippedMask;
 
@@ -13,7 +14,10 @@ public sealed class armour : MonoBehaviour
     private void Awake()
     {
         playerInventory = GetComponent<inventory>();
-        equippedMask = PlayerPrefs.GetInt(SaveKey, 0) & EquipmentMask;
+        int savedMask = PlayerPrefs.GetInt(SaveKey, -1);
+        equippedMask = savedMask < 0
+            ? PlayerPrefs.GetInt(LegacySaveKey, 0) & 15
+            : savedMask & EquipmentMask;
         RecalculateProtection();
     }
 
@@ -24,6 +28,10 @@ public sealed class armour : MonoBehaviour
         equippedAny |= Equip(ItemTypes.LeatherChestplate);
         equippedAny |= Equip(ItemTypes.LeatherLeggings);
         equippedAny |= Equip(ItemTypes.LeatherBoots);
+        equippedAny |= Equip(ItemTypes.SilverHelmet);
+        equippedAny |= Equip(ItemTypes.SilverChestplate);
+        equippedAny |= Equip(ItemTypes.SilverLeggings);
+        equippedAny |= Equip(ItemTypes.SilverBoots);
         return equippedAny;
     }
 
@@ -39,14 +47,20 @@ public sealed class armour : MonoBehaviour
             case ItemTypes.LeatherHelmet:
             case ItemTypes.LeatherChestplate:
             case ItemTypes.LeatherLeggings:
-            case ItemTypes.LeatherBoots: return Equip(itemType);
+            case ItemTypes.LeatherBoots:
+            case ItemTypes.SilverHelmet:
+            case ItemTypes.SilverChestplate:
+            case ItemTypes.SilverLeggings:
+            case ItemTypes.SilverBoots: return Equip(itemType);
             default: return false;
         }
     }
 
     private bool Equip(int itemType)
     {
-        int equipmentBit = 1 << (itemType - ItemTypes.LeatherHelmet);
+        int equipmentBit = 1 << (itemType <= ItemTypes.LeatherBoots
+            ? itemType - ItemTypes.LeatherHelmet
+            : 4 + itemType - ItemTypes.SilverHelmet);
         if (playerInventory == null || (equippedMask & equipmentBit) != 0 ||
             playerInventory.CountItem(itemType) <= 0 ||
             !playerInventory.TryUseItem(itemType))
@@ -67,7 +81,11 @@ public sealed class armour : MonoBehaviour
         if ((equippedMask & 2) != 0) { EquippedPieces++; DamageReduction += 0.2f; }
         if ((equippedMask & 4) != 0) { EquippedPieces++; DamageReduction += 0.14f; }
         if ((equippedMask & 8) != 0) { EquippedPieces++; DamageReduction += 0.08f; }
-        DamageReduction = Mathf.Min(0.5f, DamageReduction);
+        if ((equippedMask & 16) != 0) { EquippedPieces++; DamageReduction += 0.12f; }
+        if ((equippedMask & 32) != 0) { EquippedPieces++; DamageReduction += 0.28f; }
+        if ((equippedMask & 64) != 0) { EquippedPieces++; DamageReduction += 0.2f; }
+        if ((equippedMask & 128) != 0) { EquippedPieces++; DamageReduction += 0.12f; }
+        DamageReduction = Mathf.Min(0.7f, DamageReduction);
     }
 
     private void OnGUI()

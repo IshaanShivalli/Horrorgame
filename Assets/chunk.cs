@@ -14,7 +14,7 @@ public sealed class chunk
     private readonly world world;
     private readonly int[,,] blocks = new int[global::world.ChunkSize, global::world.WorldHeight, global::world.ChunkSize];
     private readonly List<Vector3Int> treeTrunks = new List<Vector3Int>();
-    private readonly List<GameObject> torchLights = new List<GameObject>();
+    private readonly List<GameObject> torchModels = new List<GameObject>();
     private readonly GameObject gameObject;
     private readonly MeshFilter meshFilter;
     private readonly MeshCollider meshCollider;
@@ -65,11 +65,14 @@ public sealed class chunk
                     blocks[trunkBlock.x, trunkBlock.y, trunkBlock.z] = ItemTypes.Log;
             }
 
-            if (saveVersion < world.CurrentChunkSaveVersion &&
-                WorldStructures.GenerateChunk(world, coordinate, blocks))
+            if (saveVersion < world.CurrentChunkSaveVersion)
+            {
+                WorldStructures.GenerateChunk(world, coordinate, blocks, true);
                 isDirty = true;
+            }
         }
 
+        WorldStructures.CreateChunkGraveModels(world, coordinate, gameObject.transform);
         RecalculateHighestBlockY();
     }
 
@@ -77,7 +80,7 @@ public sealed class chunk
     {
         if (x < 0 || x >= world.ChunkSize || y < 0 || y >= world.WorldHeight ||
             z < 0 || z >= world.ChunkSize ||
-            (blockType != 0 && !ItemTypes.IsBlock(blockType)))
+            (blockType != 0 && !ItemTypes.IsWorldBlock(blockType)))
             return false;
         if (blocks[x, y, z] == blockType)
             return true;
@@ -142,15 +145,15 @@ public sealed class chunk
 
     public void BuildMesh()
     {
-        foreach (GameObject torchLight in torchLights)
+        foreach (GameObject torchModel in torchModels)
         {
-            if (torchLight != null)
+            if (torchModel != null)
             {
-                torchLight.SetActive(false);
-                UnityEngine.Object.Destroy(torchLight);
+                torchModel.SetActive(false);
+                UnityEngine.Object.Destroy(torchModel);
             }
         }
-        torchLights.Clear();
+        torchModels.Clear();
 
         List<Vector3> vertices = new List<Vector3>();
         List<int>[] triangles = new List<int>[world.Materials.Length];
@@ -182,7 +185,13 @@ public sealed class chunk
                     if (block == 0)
                         continue;
                     if (block == ItemTypes.Torch)
-                        CreateTorchLight(x, y, z);
+                    {
+                        torchModels.Add(torch.CreateModel(
+                            gameObject.transform,
+                            new Vector3(x + 0.5f, y, z + 0.5f),
+                            false));
+                        continue;
+                    }
 
                     for (int face = 0; face < directions.Length; face++)
                     {
@@ -235,13 +244,6 @@ public sealed class chunk
             UnityEngine.Object.Destroy(previousMesh);
     }
 
-    private void CreateTorchLight(int x, int y, int z)
-    {
-        torchLights.Add(torch.CreateLight(
-            gameObject.transform,
-            new Vector3(x + 0.5f, y + 0.5f, z + 0.5f)));
-    }
-
     private bool IsSolid(int x, int y, int z)
     {
         if (y < 0)
@@ -249,7 +251,7 @@ public sealed class chunk
         if (y >= world.WorldHeight)
             return false;
         if (x >= 0 && x < world.ChunkSize && z >= 0 && z < world.ChunkSize)
-            return blocks[x, y, z] != 0;
+            return blocks[x, y, z] != 0 && blocks[x, y, z] != ItemTypes.Torch;
 
         int worldX = Coordinate.x * world.ChunkSize + x;
         int worldZ = Coordinate.y * world.ChunkSize + z;
@@ -257,7 +259,8 @@ public sealed class chunk
             Mathf.FloorToInt((float)worldX / world.ChunkSize),
             Mathf.FloorToInt((float)worldZ / world.ChunkSize));
         return world.Chunks.TryGetValue(neighborCoordinate, out chunk neighbor) &&
-            neighbor.blocks[worldX - neighborCoordinate.x * world.ChunkSize, y, worldZ - neighborCoordinate.y * world.ChunkSize] != 0;
+            neighbor.blocks[worldX - neighborCoordinate.x * world.ChunkSize, y, worldZ - neighborCoordinate.y * world.ChunkSize] != 0 &&
+            neighbor.blocks[worldX - neighborCoordinate.x * world.ChunkSize, y, worldZ - neighborCoordinate.y * world.ChunkSize] != ItemTypes.Torch;
     }
 
     private void RecalculateHighestBlockY()
