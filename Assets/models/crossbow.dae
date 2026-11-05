@@ -1,0 +1,257 @@
+<?xml version='1.0' encoding='utf-8'?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <authoring_tool>HorrorGame OBJ to Collada conversion</authoring_tool>
+    </contributor>
+    <unit name="meter" meter="1" />
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="crossbow-skin-effect" name="skin">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.32 0.46 0.3 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-cloth-effect" name="cloth">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.3 0.2 0.16 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-pants-effect" name="pants">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.12 0.16 0.19 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-eye-effect" name="eye">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.9 0.08 0.04 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-robe-effect" name="robe">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.2 0.08 0.3 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-wing-effect" name="wing">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.22 0.1 0.18 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-wood-effect" name="wood">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.24 0.15 0.08 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-stone-effect" name="stone">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.32 0.34 0.38 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="crossbow-metal-effect" name="metal">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.72 0.79 0.85 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="crossbow-skin" name="skin">
+      <instance_effect url="#crossbow-skin-effect" />
+    </material>
+    <material id="crossbow-cloth" name="cloth">
+      <instance_effect url="#crossbow-cloth-effect" />
+    </material>
+    <material id="crossbow-pants" name="pants">
+      <instance_effect url="#crossbow-pants-effect" />
+    </material>
+    <material id="crossbow-eye" name="eye">
+      <instance_effect url="#crossbow-eye-effect" />
+    </material>
+    <material id="crossbow-robe" name="robe">
+      <instance_effect url="#crossbow-robe-effect" />
+    </material>
+    <material id="crossbow-wing" name="wing">
+      <instance_effect url="#crossbow-wing-effect" />
+    </material>
+    <material id="crossbow-wood" name="wood">
+      <instance_effect url="#crossbow-wood-effect" />
+    </material>
+    <material id="crossbow-stone" name="stone">
+      <instance_effect url="#crossbow-stone-effect" />
+    </material>
+    <material id="crossbow-metal" name="metal">
+      <instance_effect url="#crossbow-metal-effect" />
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="crossbow-geometry" name="crossbow">
+      <mesh>
+        <source id="crossbow-positions">
+          <float_array id="crossbow-positions-array" count="72">-0.09 -0.5 -0.11 0.09 -0.5 -0.11 0.09 0.5 -0.11 -0.09 0.5 -0.11 -0.09 -0.5 0.11 0.09 -0.5 0.11 0.09 0.5 0.11 -0.09 0.5 0.11 -0.6 0.02 -0.08 0.6 0.02 -0.08 0.6 0.14 -0.08 -0.6 0.14 -0.08 -0.6 0.02 0.08 0.6 0.02 0.08 0.6 0.14 0.08 -0.6 0.14 0.08 -0.35 0.095 -0.005 0.35 0.095 -0.005 0.35 0.165 -0.005 -0.35 0.165 -0.005 -0.35 0.095 0.065 0.35 0.095 0.065 0.35 0.165 0.065 -0.35 0.165 0.065</float_array>
+          <technique_common>
+            <accessor source="#crossbow-positions-array" count="24" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="crossbow-normals">
+          <float_array id="crossbow-normals-array" count="108">0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0</float_array>
+          <technique_common>
+            <accessor source="#crossbow-normals-array" count="36" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="crossbow-vertices">
+          <input semantic="POSITION" source="#crossbow-positions" />
+        </vertices>
+        <triangles material="crossbow-wood" count="24">
+          <input semantic="NORMAL" source="#crossbow-normals" offset="1" />
+          <input semantic="VERTEX" source="#crossbow-vertices" offset="0" />
+          <p>0 0 3 0 2 0 0 1 2 1 1 1 4 2 5 2 6 2 4 3 6 3 7 3 0 4 4 4 7 4 0 5 7 5 3 5 1 6 2 6 6 6 1 7 6 7 5 7 3 8 7 8 6 8 3 9 6 9 2 9 0 10 1 10 5 10 0 11 5 11 4 11 8 12 11 12 10 12 8 13 10 13 9 13 12 14 13 14 14 14 12 15 14 15 15 15 8 16 12 16 15 16 8 17 15 17 11 17 9 18 10 18 14 18 9 19 14 19 13 19 11 20 15 20 14 20 11 21 14 21 10 21 8 22 9 22 13 22 8 23 13 23 12 23</p>
+        </triangles>
+        <triangles material="crossbow-metal" count="12">
+          <input semantic="NORMAL" source="#crossbow-normals" offset="1" />
+          <input semantic="VERTEX" source="#crossbow-vertices" offset="0" />
+          <p>16 24 19 24 18 24 16 25 18 25 17 25 20 26 21 26 22 26 20 27 22 27 23 27 16 28 20 28 23 28 16 29 23 29 19 29 17 30 18 30 22 30 17 31 22 31 21 31 19 32 23 32 22 32 19 33 22 33 18 33 16 34 17 34 21 34 16 35 21 35 20 35</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="crossbow-scene" name="crossbow">
+      <node id="crossbow" name="crossbow" type="NODE">
+        <instance_geometry url="#crossbow-geometry">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="crossbow-skin" target="#crossbow-skin" />
+              <instance_material symbol="crossbow-cloth" target="#crossbow-cloth" />
+              <instance_material symbol="crossbow-pants" target="#crossbow-pants" />
+              <instance_material symbol="crossbow-eye" target="#crossbow-eye" />
+              <instance_material symbol="crossbow-robe" target="#crossbow-robe" />
+              <instance_material symbol="crossbow-wing" target="#crossbow-wing" />
+              <instance_material symbol="crossbow-wood" target="#crossbow-wood" />
+              <instance_material symbol="crossbow-stone" target="#crossbow-stone" />
+              <instance_material symbol="crossbow-metal" target="#crossbow-metal" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#crossbow-scene" />
+  </scene>
+</COLLADA>

@@ -18,6 +18,7 @@ public abstract class hostileMob : MonoBehaviour
     private Color[][] originalRendererColors;
     private int[][] rendererColorProperties;
     private MaterialPropertyBlock hitFlashBlock;
+    public Vector3 dungeonCenter; // Track dungeon center for boundary checking
 
     protected world CurrentWorld { get; private set; }
     protected player TargetPlayer { get; private set; }
@@ -57,6 +58,7 @@ public abstract class hostileMob : MonoBehaviour
         mobAudio.rolloffMode = AudioRolloffMode.Linear;
         vocalizationTimer = Random.Range(4f, 10f);
         PlayVocalization();
+        dungeonCenter = Vector3.zero; // Default: no dungeon boundary
     }
 
     protected virtual void Update()
@@ -90,10 +92,8 @@ public abstract class hostileMob : MonoBehaviour
         thinkTimer = ThinkInterval;
         if (confusionDuration > 0f)
         {
-            Vector3 awayFromPlayer = transform.position - TargetPlayer.transform.position;
-            if (awayFromPlayer.sqrMagnitude < 0.01f)
-                awayFromPlayer = transform.forward;
-            MoveToward(transform.position + awayFromPlayer.normalized * 8f, deltaTime);
+            Vector3 towardPlayer = TargetPlayer.transform.position - transform.position;
+            MoveToward(transform.position + towardPlayer.normalized * 8f, deltaTime);
             return;
         }
         Think(deltaTime);
@@ -101,6 +101,21 @@ public abstract class hostileMob : MonoBehaviour
 
     protected virtual void Think(float deltaTime)
     {
+        // Dungeon boundary check: keep mobs inside their dungeon
+        if (dungeonCenter != Vector3.zero)
+        {
+            float distanceToCenter = (transform.position - dungeonCenter).sqrMagnitude;
+            float maxDungeonDistance = 30f; // Maximum distance from dungeon center
+            if (distanceToCenter > maxDungeonDistance * maxDungeonDistance)
+            {
+                // Move mob back toward dungeon center
+                Vector3 towardCenter = dungeonCenter - transform.position;
+                towardCenter.y = transform.position.y; // Keep current height
+                MoveToward(transform.position + towardCenter.normalized * 4f, deltaTime);
+                return;
+            }
+        }
+
         Vector3 offset = TargetPlayer.transform.position - transform.position;
         Vector3 horizontalOffset = Vector3.ProjectOnPlane(offset, Vector3.up);
         float distance = horizontalOffset.magnitude;
@@ -145,31 +160,14 @@ public abstract class hostileMob : MonoBehaviour
         direction = Vector3.ProjectOnPlane(offset, Vector3.up);
         direction = direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.zero;
 
-        float comfortDistance = 3f;
-        float currentDistance = offset.sqrMagnitude > 0.01f ? Mathf.Sqrt(offset.sqrMagnitude) : 0f;
-
         if (controller.isGrounded)
             verticalSpeed = -1f;
         else
             verticalSpeed -= 20f * deltaTime;
 
-        if (currentDistance > comfortDistance)
-        {
-            Vector3 movement = direction * MovementSpeed;
-            movement.y = verticalSpeed;
-            controller.Move(movement * deltaTime);
-        }
-        else
-        {
-            Vector3 awayFromPlayer = transform.position - TargetPlayer.transform.position;
-            float awayDistance = awayFromPlayer.sqrMagnitude;
-            if (awayDistance > 0.01f)
-            {
-                awayFromPlayer.Normalize();
-                Vector3 moveAway = awayFromPlayer * (MovementSpeed * 0.5f) * deltaTime;
-                controller.Move(moveAway);
-            }
-        }
+        Vector3 movement = direction * MovementSpeed;
+        movement.y = verticalSpeed;
+        controller.Move(movement * deltaTime);
 
         if (direction.sqrMagnitude > 0.01f)
         {
@@ -220,7 +218,45 @@ public abstract class hostileMob : MonoBehaviour
         if (health <= 0f)
         {
             CurrentWorld.OnMobKilled(this);
+            GameAudio.PlayMobDeathSound(DisplayName, transform.position);
+            DeathEffect();
             Destroy(gameObject);
+        }
+    }
+
+    protected virtual void DeathEffect()
+    {
+        Vector3 position = transform.position;
+        Color bloodColor = default;
+        if (this is zombies)
+            bloodColor = new Color(0.8f, 0.045f, 0.035f);
+        else if (this is witches)
+            bloodColor = new Color(0.12f, 0.85f, 0.14f);
+        else if (this is ghouls)
+            bloodColor = new Color(0.31f, 0.95f, 0.12f);
+        else
+            bloodColor = Color.red;
+
+        // Emit blood particles at death position
+        MobEffects.EmitBlood(CurrentWorld, position + Vector3.up * 0.9f, bloodColor);
+
+        // Add blood particles on ground position
+        MobEffects.EmitBlood(CurrentWorld, position + Vector3.up * 0.1f, bloodColor);
+
+        // Keep the body on ground with Rigidbody
+        Rigidbody rb = gameObject.AddComponent<Rigidbody>();
+        rb.useGravity = true;
+        rb.mass = 1f;
+        rb.linearVelocity = Vector3.zero;
+        rb.position = position + Vector3.up * 0.5f;
+
+        // Small blood splash effect
+        for (int i = 0; i < 6; i++)
+        {
+            Vector3 splashPos = position + Vector3.up * UnityEngine.Random.Range(0.1f, 0.5f);
+            Color splashColor = bloodColor;
+            splashColor.a = UnityEngine.Random.Range(0.3f, 0.6f);
+            MobEffects.EmitBlood(CurrentWorld, splashPos, splashColor);
         }
     }
 

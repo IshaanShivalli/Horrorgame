@@ -13,7 +13,7 @@ public sealed class ghouls : hostileMob
     protected override float MaximumHealth => 10f;
     protected override float AttackDamage => 2f;
     protected override float AttackCooldown => 0.9f;
-    protected override float MovementSpeed => 3.2f;
+    protected override float MovementSpeed => 1.5f;
     protected override bool CanFly => true;
     protected override float AttackRange => 1.8f;
     protected override bool IgnoreTargetCollision => true;
@@ -60,20 +60,20 @@ public sealed class ghouls : hostileMob
 
         if (dashDuration > 0f)
         {
-            DashToward(dashDirection, 11f, deltaTime);
+            DashToward(dashDirection, 4f, deltaTime);
             if (offset.magnitude <= AttackRange + 0.65f && Mathf.Abs(offset.y) <= 1.8f)
             {
                 dashDuration = 0f;
                 AttackWithKnockback();
-                dashCooldown = 1.8f;
+                dashCooldown = 2.5f;
             }
             return;
         }
 
-        if (distance > AttackRange + 0.65f && distance <= 5.5f && dashCooldown <= 0f)
+        if (distance > AttackRange + 0.65f && distance <= 5.5f && dashCooldown <= 0f && UnityEngine.Random.value < 0.2f)
         {
             dashDirection = offset.normalized;
-            dashDuration = 0.45f;
+            dashDuration = 0.6f;
             return;
         }
 

@@ -33,6 +33,10 @@ public sealed class respawn : MonoBehaviour
         world.InteractionStatus = deathMessage;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        
+        // Generate new world seed and reset world
+        int newSeed = world.WorldSeedValue;
+        world.ResetWorldWithNewSeed(newSeed);
     }
 
     public void RespawnPlayer()
@@ -50,10 +54,7 @@ public sealed class respawn : MonoBehaviour
 
     public void DrawDeathScreen()
     {
-        Color previousColor = GUI.color;
-        GUI.color = new Color(0f, 0f, 0f, 0.8f);
-        GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture);
-        GUI.color = new Color(0.9f, 0.12f, 0.12f);
+        GUI.color = Color.white;
         GUI.Label(new Rect(0f, Screen.height * 0.36f, Screen.width, 56f), "YOU DIED", CenteredLabelStyle(38, Color.white));
         GUI.color = Color.white;
         GUI.Label(new Rect(0f, Screen.height * 0.46f, Screen.width, 32f), deathMessage, CenteredLabelStyle(18, Color.white));
@@ -63,7 +64,6 @@ public sealed class respawn : MonoBehaviour
             RespawnPlayer();
 
         GUI.Label(new Rect(0f, Screen.height * 0.55f + 54f, Screen.width, 28f), "or press R", CenteredLabelStyle(14, Color.white));
-        GUI.color = previousColor;
     }
 
     private static GUIStyle CenteredLabelStyle(int fontSize, Color textColor)

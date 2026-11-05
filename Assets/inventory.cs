@@ -370,25 +370,25 @@ public sealed class inventory : MonoBehaviour
         Color color;
         switch (itemType)
         {
-            case ItemTypes.Grass: color = new Color(0.28f, 0.64f, 0.24f); break;
-            case ItemTypes.Dirt: color = new Color(0.48f, 0.32f, 0.19f); break;
-            case ItemTypes.Log: color = new Color(0.36f, 0.2f, 0.1f); break;
-            case ItemTypes.Planks: color = new Color(0.68f, 0.46f, 0.24f); break;
-            case ItemTypes.CraftingTable: color = new Color(0.53f, 0.34f, 0.16f); break;
-            case ItemTypes.Stick: color = new Color(0.7f, 0.53f, 0.3f); break;
-            case ItemTypes.WoodenSword:
-            case ItemTypes.WoodenAxe:
-            case ItemTypes.WoodenPickaxe: color = new Color(0.55f, 0.57f, 0.6f); break;
-            case ItemTypes.Torch: color = new Color(1f, 0.67f, 0.2f); break;
-            case ItemTypes.SilverOre:
-            case ItemTypes.SilverCoin:
-            case ItemTypes.SilverArrow: color = new Color(0.75f, 0.83f, 0.92f); break;
-            case ItemTypes.Crossbow: color = new Color(0.39f, 0.25f, 0.14f); break;
+            case ItemTypes.Grass: color = new Color(0.2f, 0.5f, 0.15f); break;
+            case ItemTypes.Dirt: color = new Color(0.35f, 0.25f, 0.1f); break;
+            case ItemTypes.Log: color = new Color(0.25f, 0.15f, 0.05f); break;
+            case ItemTypes.Planks: color = new Color(0.45f, 0.3f, 0.12f); break;
+            case ItemTypes.CraftingTable: color = new Color(0.4f, 0.2f, 0.08f); break;
+            case ItemTypes.Stick: color = new Color(0.5f, 0.4f, 0.25f); break;
+            case ItemTypes.WoodenSword: color = new Color(0.4f, 0.35f, 0.2f); break;
+            case ItemTypes.WoodenAxe: color = new Color(0.4f, 0.35f, 0.2f); break;
+            case ItemTypes.WoodenPickaxe: color = new Color(0.4f, 0.35f, 0.2f); break;
+            case ItemTypes.Torch: color = new Color(1f, 0.5f, 0.1f); break;
+            case ItemTypes.SilverOre: color = new Color(0.6f, 0.7f, 0.8f); break;
+            case ItemTypes.SilverCoin: color = new Color(0.9f, 0.85f, 0.7f); break;
+            case ItemTypes.SilverArrow: color = new Color(0.8f, 0.85f, 1f); break;
+            case ItemTypes.Crossbow: color = new Color(0.5f, 0.35f, 0.1f); break;
             case ItemTypes.LeatherHelmet:
             case ItemTypes.LeatherChestplate:
             case ItemTypes.LeatherLeggings:
-            case ItemTypes.LeatherBoots: color = new Color(0.48f, 0.29f, 0.16f); break;
-            default: color = new Color(0.52f, 0.55f, 0.58f); break;
+            case ItemTypes.LeatherBoots: color = new Color(0.4f, 0.2f, 0.12f); break;
+            default: color = new Color(0.5f, 0.5f, 0.5f); break;
         }
         float inset = rect.width * 0.12f;
         DrawRect(new Rect(rect.x + inset, rect.y, rect.width - inset * 2f, rect.height), color);

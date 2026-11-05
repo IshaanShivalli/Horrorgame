@@ -6,24 +6,14 @@ public sealed class witches : hostileMob
     private static Material skin;
     private static Material eyes;
     private float spellTimer = 1f;
-    private Vector3 dungeonDoorway;
-    private Vector3 dungeonExterior;
-    private bool exitingDungeon;
 
     protected override float MaximumHealth => 30f;
     protected override float AttackDamage => 4f;
     protected override float AttackCooldown => 2.4f;
     protected override float MovementSpeed => 1.15f;
     protected override bool CanFly => false;
-    protected override float AttackRange => 12f;
+    protected override float AttackRange => 13f;
     public override string DisplayName => "witch";
-
-    public void SetDungeonExit(Vector3 doorway, Vector3 exterior)
-    {
-        dungeonDoorway = doorway;
-        dungeonExterior = exterior;
-        exitingDungeon = true;
-    }
 
     private void Awake()
     {
@@ -51,23 +41,10 @@ public sealed class witches : hostileMob
     protected override void Think(float deltaTime)
     {
         spellTimer -= deltaTime;
-        if (exitingDungeon)
-        {
-            Vector3 exitTarget = Vector3.Distance(transform.position, dungeonDoorway) <= 1f
-                ? dungeonExterior
-                : dungeonDoorway;
-            if (Vector3.Distance(transform.position, dungeonExterior) <= 1.25f)
-                exitingDungeon = false;
-            else
-            {
-                MoveToward(exitTarget, deltaTime);
-                return;
-            }
-        }
 
         Vector3 offset = TargetPlayer.transform.position - transform.position;
         float distance = offset.magnitude;
-        if (distance > 11f)
+        if (distance > AttackRange)
         {
             MoveToward(TargetPlayer.transform.position, deltaTime);
             return;
@@ -76,7 +53,7 @@ public sealed class witches : hostileMob
         Vector3 horizontal = Vector3.ProjectOnPlane(offset, Vector3.up);
         if (distance < 4f && horizontal.sqrMagnitude > 0.01f)
         {
-            MoveToward(transform.position - horizontal.normalized * 5f, deltaTime);
+            MoveToward(transform.position - horizontal.normalized * 3f, deltaTime);
             return;
         }
 
@@ -86,7 +63,7 @@ public sealed class witches : hostileMob
                 Quaternion.LookRotation(horizontal),
                 6f * deltaTime);
 
-        if (distance > 10f || spellTimer > 0f || !HasLineOfSight())
+        if (distance > AttackRange || spellTimer > 0f || !HasLineOfSight())
             return;
 
         GameObject spellObject = new GameObject("Witch poison spell");
@@ -94,28 +71,40 @@ public sealed class witches : hostileMob
         spell.Launch(
             CurrentWorld,
             TargetPlayer,
-            transform.position + Vector3.up * 1.55f + transform.forward * 0.35f);
+            transform.position + Vector3.up * 2f + transform.forward * 0.35f);
         spellTimer = AttackCooldown;
         PlayVocalization();
     }
 
     private bool HasLineOfSight()
     {
-        Vector3 origin = transform.position + Vector3.up * 1.55f;
+        Vector3 origin = transform.position + Vector3.up * 2f;
         Vector3 target = TargetPlayer.transform.position + Vector3.up * 0.8f;
         Vector3 direction = target - origin;
         float rayDistance = direction.magnitude;
-        if (rayDistance <= 0.01f ||
-            !Physics.Raycast(
-                origin,
-                direction / rayDistance,
-                out RaycastHit hit,
-                rayDistance,
-                ~0,
-                QueryTriggerInteraction.Ignore))
+        if (rayDistance <= 0.01f)
             return false;
 
-        return hit.transform == TargetPlayer.transform ||
-            hit.transform.IsChildOf(TargetPlayer.transform);
+        RaycastHit[] hits = Physics.RaycastAll(
+            origin,
+            direction / rayDistance,
+            rayDistance,
+            ~0,
+            QueryTriggerInteraction.Ignore);
+        float nearestDistance = float.MaxValue;
+        Transform nearestTransform = null;
+        foreach (RaycastHit hit in hits)
+        {
+            if (hit.transform == transform || hit.transform.IsChildOf(transform))
+                continue;
+            if (hit.distance < nearestDistance)
+            {
+                nearestDistance = hit.distance;
+                nearestTransform = hit.transform;
+            }
+        }
+
+        return nearestTransform == TargetPlayer.transform ||
+            (nearestTransform != null && nearestTransform.IsChildOf(TargetPlayer.transform));
     }
 }

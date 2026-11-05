@@ -4,7 +4,12 @@ using UnityEngine;
 
 public static class Trees
 {
-    public static List<Vector3Int> Generate(world currentWorld, Vector2Int coordinate, int[,,] blocks, Transform parent)
+    public static List<Vector3Int> Generate(
+        world currentWorld,
+        Vector2Int coordinate,
+        int[,,] blocks,
+        Transform parent,
+        Dictionary<Vector2Int, GameObject> treeFoliage)
     {
         List<Vector3Int> trunks = new List<Vector3Int>();
         int seed = unchecked(coordinate.x * 73856093 ^ coordinate.y * 19349663 ^ 83492791);
@@ -44,36 +49,54 @@ public static class Trees
                 blocks[x, y, z] = ItemTypes.Log;
                 trunks.Add(new Vector3Int(x, y, z));
             }
-            CreateTree(currentWorld, parent, x + 0.5f, groundY, z + 0.5f, trunkHeight, random);
+
+            // 30% of trees are bare (no leaves, only branches with hanging bodies)
+            bool bareTree = random.NextDouble() > 0.7;
+            treeFoliage[new Vector2Int(x, z)] = CreateTree(
+                currentWorld,
+                parent,
+                x + 0.5f,
+                groundY,
+                z + 0.5f,
+                trunkHeight,
+                random,
+                bareTree);
         }
 
         return trunks;
     }
 
-    private static void CreateTree(
+    private static GameObject CreateTree(
         world currentWorld,
         Transform parent,
         float x,
         float groundY,
         float z,
         int trunkHeight,
-        System.Random random)
+        System.Random random,
+        bool bareTree = false)
     {
         GameObject treeRoot = new GameObject("Horror Tree");
         treeRoot.transform.SetParent(parent, false);
         treeRoot.transform.localPosition = new Vector3(x, groundY, z);
         treeRoot.layer = LayerMask.NameToLayer("Ignore Raycast");
 
-        int canopyBase = trunkHeight - 2;
-        float[] canopySizes = { 3.8f, 3f, 2f };
-        for (int layer = 0; layer < canopySizes.Length; layer++)
+        // Skip leaf canopy if bare tree
+        if (!bareTree)
         {
-            float size = canopySizes[layer];
-            float canopyY = canopyBase + layer * 1.1f;
-            CreatePrimitive(treeRoot.transform, PrimitiveType.Cube, "Blocky Canopy",
-                new Vector3(0f, canopyY, 0f),
-                new Vector3(size, 1.1f, size),
-                currentWorld.TreeLeafMaterial);
+            GameObject foliage = new GameObject("Tree Leaves");
+            foliage.transform.SetParent(treeRoot.transform, false);
+            int canopyBase = trunkHeight - 2;
+            float[] canopySizes = { 3.8f, 3f, 2f };
+            for (int layer = 0; layer < canopySizes.Length; layer++)
+            {
+                float size = canopySizes[layer];
+                float canopyY = canopyBase + layer * 1.1f;
+                CreatePrimitive(foliage.transform, PrimitiveType.Cube, "Blocky Canopy",
+                    new Vector3(0f, canopyY, 0f),
+                    new Vector3(size, 1.1f, size),
+                    currentWorld.TreeLeafMaterial);
+            }
         }
 
         for (int branch = 0; branch < 3; branch++)
@@ -98,6 +121,7 @@ public static class Trees
             hangingAnchor + Vector3.down * 1.15f,
             hangingDirection,
             currentWorld.HangingBodyMaterial);
+        return treeRoot;
     }
 
     private static void CreateBranch(Transform parent, Vector3 start, Vector3 end, Material material)

@@ -26,7 +26,7 @@ public static class MobModels
 
     public static void CreateZombie(Transform root, Material skin, Material shirt, Material pants, Material eyes)
     {
-        if (TryCreateImported(root, "zombie"))
+        if (TryCreateImported(root, "zombie", skin, shirt, pants, eyes))
             return;
 
         Part(root, PrimitiveType.Capsule, "Torso", new Vector3(0f, 1.08f, 0f),
@@ -114,7 +114,13 @@ public static class MobModels
         return part;
     }
 
-    private static bool TryCreateImported(Transform root, string modelName)
+    private static bool TryCreateImported(
+        Transform root,
+        string modelName,
+        Material skin,
+        Material shirt,
+        Material pants,
+        Material eyes)
     {
         GameObject modelPrefab = Resources.Load<GameObject>("models/" + modelName);
         if (modelPrefab == null)
@@ -122,6 +128,20 @@ public static class MobModels
 
         GameObject model = Object.Instantiate(modelPrefab, root, false);
         model.name = modelName + " model";
+        foreach (Renderer modelRenderer in model.GetComponentsInChildren<Renderer>(true))
+        {
+            Material[] importedMaterials = modelRenderer.sharedMaterials;
+            for (int i = 0; i < importedMaterials.Length; i++)
+            {
+                string materialName = importedMaterials[i] != null
+                    ? importedMaterials[i].name.ToLowerInvariant()
+                    : string.Empty;
+                importedMaterials[i] = materialName.Contains("eye") ? eyes :
+                    materialName.Contains("skin") ? skin :
+                    materialName.Contains("pant") ? pants : shirt;
+            }
+            modelRenderer.sharedMaterials = importedMaterials;
+        }
         return true;
     }
 }

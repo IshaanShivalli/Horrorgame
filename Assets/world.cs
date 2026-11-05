@@ -7,23 +7,26 @@ using UnityEngine.SceneManagement;
 
 public sealed class world : MonoBehaviour
 {
-    public const int ChunkSize = 16;
+public const int ChunkSize = 16;
     public const int WorldHeight = 256;
     internal const int LegacyWorldHeight = 24;
-    internal const int CurrentChunkSaveVersion = 6;
+    internal const int CurrentChunkSaveVersion = 7;
     private const int ChunkViewDistance = 3;
-    private const int MaximumZombies = 12;
-    private const int InitialZombieCount = 3;
+    private const int MaximumZombies = 60;
+    private const int InitialZombieCount = 5;
     private const int MaximumGhouls = 5;
     private const int MaximumWitches = 8;
     private const int MaximumPumpkins = 4;
     private const int DungeonZombieCount = 3;
-    private const float ZombieSpawnInterval = 16f;
+    private const float ZombieSpawnInterval = 8f;
     private const float PumpkinSpawnInterval = 12f;
-    private const float RedMoonCycle = 210f;
-    private const float RedMoonDuration = 55f;
+    private const float PostBloodMoonSpawnPause = 15f;
+    private const float RedMoonCycle = 180f;
+    private const float RedMoonDuration = 45f;
     private const float WeatherCycle = 180f;
     private const float WeatherDuration = 30f;
+    private int WorldSeed;
+    public int WorldSeedValue => WorldSeed;
     private bool isPaused;
 
     private readonly Dictionary<Vector2Int, chunk> chunks = new Dictionary<Vector2Int, chunk>();
@@ -56,6 +59,8 @@ public sealed class world : MonoBehaviour
     private float zombieSpawnTimer;
     private float pumpkinSpawnTimer;
     private float structureScanTimer;
+    private float bloodSpawnTimer;
+    private float postBloodMoonSpawnTimer;
     private Vector2Int playerChunk;
     private bool isRedMoon;
     private WeatherType weatherType;
@@ -101,6 +106,7 @@ public sealed class world : MonoBehaviour
 
     private void Awake()
     {
+        WorldSeed = UnityEngine.Random.Range(0, 100000);
         Camera sceneCamera = Camera.main;
         Light sceneLight = FindAnyObjectByType<Light>();
 
@@ -136,14 +142,15 @@ public sealed class world : MonoBehaviour
     private void ConfigureLighting(Light sceneLight)
     {
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.1f, 0.12f, 0.15f);
-        RenderSettings.ambientIntensity = 0.5f;
+        RenderSettings.ambientLight = new Color(0.12f, 0.15f, 0.2f);
+        RenderSettings.ambientIntensity = 0.4f;
         RenderSettings.skybox = null;
         RenderSettings.fog = true;
         RenderSettings.fogColor = new Color(0.08f, 0.1f, 0.14f);
-        RenderSettings.fogMode = FogMode.Linear;
-        RenderSettings.fogStartDistance = 40f;
-        RenderSettings.fogEndDistance = 100f;
+        RenderSettings.fogMode = FogMode.ExponentialSquared;
+        RenderSettings.fogStartDistance = 15f;
+        RenderSettings.fogEndDistance = 50f;
+        RenderSettings.fogDensity = 0.08f;
 
         if (sceneLight == null)
         {
@@ -154,8 +161,8 @@ public sealed class world : MonoBehaviour
         sceneLight.type = LightType.Directional;
         moonLight = sceneLight;
         sceneLight.color = new Color(0.6f, 0.7f, 0.8f);
-        sceneLight.intensity = 0.3f;
-        sceneLight.transform.rotation = Quaternion.Euler(50f, -35f, 0f);
+        sceneLight.intensity = 0.45f;
+        sceneLight.transform.rotation = Quaternion.Euler(30f, -45f, 0f);
     }
 
     private void CreateMaterials()
@@ -164,8 +171,8 @@ public sealed class world : MonoBehaviour
         if (shader == null)
             shader = Shader.Find("Standard");
 
-        materials[0] = CreateMaterial(shader, "Grass", Color.white);
-        materials[1] = CreateMaterial(shader, "Dirt", Color.white);
+        materials[0] = CreateMaterial(shader, "Grass", new Color(0.8f, 0.7f, 0.6f)); // Barren dry grass
+        materials[1] = CreateMaterial(shader, "Dirt", new Color(0.4f, 0.35f, 0.3f));
         materials[2] = CreateMaterial(shader, "Stone", Color.white);
         materials[3] = CreateMaterial(shader, "Wood", Color.white);
         materials[4] = CreateMaterial(shader, "Torch", Color.white);
@@ -269,34 +276,47 @@ public sealed class world : MonoBehaviour
 
         UpdateMoonCycle();
         mobs.RemoveAll(mob => mob == null);
+        postBloodMoonSpawnTimer = Mathf.Max(0f, postBloodMoonSpawnTimer - Time.deltaTime);
+        bool mobSpawningBlocked = postBloodMoonSpawnTimer > 0f;
         structureScanTimer -= Time.deltaTime;
         if (structureScanTimer <= 0f)
         {
             structureScanTimer = 1f;
-            SpawnNearbyStructures();
+            if (!mobSpawningBlocked)
+                SpawnNearbyStructures();
             UpdateWaypointHints();
         }
 
-        zombieSpawnTimer += Time.deltaTime;
-        if (zombieSpawnTimer >= ZombieSpawnInterval)
+        if (!mobSpawningBlocked)
         {
-            zombieSpawnTimer = 0f;
-            if (CountMobs<zombies>() < MaximumZombies)
-                SpawnZombie();
+            zombieSpawnTimer += Time.deltaTime;
+            if (zombieSpawnTimer >= ZombieSpawnInterval)
+            {
+                zombieSpawnTimer = 0f;
+                if (CountMobs<zombies>() < MaximumZombies)
+                    SpawnZombie();
+            }
+
+            if (isRedMoon && CountMobs<ghouls>() < MaximumGhouls &&
+                UnityEngine.Random.value < Time.deltaTime / 60f)
+                SpawnGhoul();
+
+            if (isRedMoon && CountMobs<pumpkinBomb>() < MaximumPumpkins)
+            {
+                pumpkinSpawnTimer += Time.deltaTime;
+                if (pumpkinSpawnTimer >= PumpkinSpawnInterval)
+                {
+                    pumpkinSpawnTimer -= PumpkinSpawnInterval;
+                    SpawnPumpkin();
+                }
+            }
         }
 
-        if (isRedMoon && CountMobs<ghouls>() < MaximumGhouls &&
-            UnityEngine.Random.value < Time.deltaTime / 12f)
-            SpawnGhoul();
-
-        if (isRedMoon && CountMobs<pumpkinBomb>() < MaximumPumpkins)
+        bloodSpawnTimer += Time.deltaTime;
+        if (bloodSpawnTimer >= 5f)
         {
-            pumpkinSpawnTimer += Time.deltaTime;
-            if (pumpkinSpawnTimer >= PumpkinSpawnInterval)
-            {
-                pumpkinSpawnTimer -= PumpkinSpawnInterval;
-                SpawnPumpkin();
-            }
+            bloodSpawnTimer = 0f;
+            SpawnBloodOnGround();
         }
     }
 
@@ -319,6 +339,11 @@ public sealed class world : MonoBehaviour
             int z = Mathf.RoundToInt(playerTransform.position.z + Mathf.Sin(angle) * distance);
             int height = GetHeight(x, z);
             Vector3 position = new Vector3(x, height + 1.02f, z);
+
+            // Ensure spawn is at least 10 blocks from spawn point (0,0,0)
+            float spawnDistSq = (position - new Vector3(0f, 0f, 0f)).sqrMagnitude;
+            if (spawnDistSq < 100f)
+                continue;
 
             if (GetBlock(new Vector3Int(x, height, z)) == 0 ||
                 GetBlock(new Vector3Int(x, height + 1, z)) != 0 ||
@@ -398,20 +423,19 @@ public sealed class world : MonoBehaviour
     {
         for (int attempt = 0; attempt < 20; attempt++)
         {
-            int xOffset = UnityEngine.Random.Range(-5, 6);
-            int zOffset = UnityEngine.Random.Range(-5, 6);
-            int yOffset = UnityEngine.Random.Range(0, 3);
-            Vector3 spawnPos = dungeonCenter + new Vector3(xOffset, yOffset, zOffset);
-
-            int height = GetHeight(Mathf.RoundToInt(spawnPos.x), Mathf.RoundToInt(spawnPos.z));
-            if (GetBlock(new Vector3Int(Mathf.RoundToInt(spawnPos.x), height, Mathf.RoundToInt(spawnPos.z))) == 0)
-            {
-                float y = height + 1.02f;
-                if (GetBlock(new Vector3Int(Mathf.RoundToInt(spawnPos.x), Mathf.RoundToInt(y), Mathf.RoundToInt(spawnPos.z))) == 0)
-                {
-                    return new Vector3(spawnPos.x, y, spawnPos.z);
-                }
-            }
+            int dungeonX = Mathf.FloorToInt(dungeonCenter.x);
+            int dungeonZ = Mathf.FloorToInt(dungeonCenter.z);
+            int x = dungeonX + UnityEngine.Random.Range(-3, 4);
+            int z = dungeonZ + 12 + UnityEngine.Random.Range(-2, 3);
+            int surfaceY = GetHeight(dungeonX, dungeonZ);
+            int floorY = surfaceY - 5;
+            if (floorY < 0)
+                return Vector3.zero;
+            if (GetBlock(new Vector3Int(x, floorY, z)) == ItemTypes.Stone &&
+                GetBlock(new Vector3Int(x, floorY + 1, z)) == 0 &&
+            GetBlock(new Vector3Int(x, floorY + 2, z)) == 0 &&
+            GetBlock(new Vector3Int(x, floorY + 3, z)) == 0)
+                return new Vector3(x + 0.5f, floorY + 1.02f, z + 0.5f);
         }
         return Vector3.zero;
     }
@@ -421,7 +445,28 @@ public sealed class world : MonoBehaviour
         float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
         Vector3 position = playerTransform.position +
             new Vector3(Mathf.Cos(angle) * 14f, UnityEngine.Random.Range(4f, 8f), Mathf.Sin(angle) * 14f);
+
+        // Ensure spawn is at least 10 blocks from spawn point (0,0,0)
+        float spawnDistSq = (position - new Vector3(0f, 0f, 0f)).sqrMagnitude;
+        if (spawnDistSq < 100f)
+            return;
+
         CreateMob<ghouls>("Ghoul", position, true);
+    }
+
+    private void SpawnBloodOnGround()
+    {
+        // Spawn blood particles at random ground locations
+        for (int i = 0; i < 3; i++)
+        {
+            float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+            float distance = UnityEngine.Random.Range(10f, 20f);
+            int x = Mathf.RoundToInt(playerTransform.position.x + Mathf.Cos(angle) * distance);
+            int z = Mathf.RoundToInt(playerTransform.position.z + Mathf.Sin(angle) * distance);
+            int height = GetHeight(x, z);
+            Vector3 bloodPos = new Vector3(x + 0.5f, height - 1f, z + 0.5f);
+            MobEffects.EmitBlood(this, bloodPos, new Color(0.8f, 0.045f, 0.035f));
+        }
     }
 
     private void SpawnPumpkin()
@@ -433,6 +478,13 @@ public sealed class world : MonoBehaviour
             int x = Mathf.RoundToInt(playerTransform.position.x + Mathf.Cos(angle) * distance);
             int z = Mathf.RoundToInt(playerTransform.position.z + Mathf.Sin(angle) * distance);
             int height = GetHeight(x, z);
+            
+            // Ensure spawn is at least 10 blocks from spawn point (0,0,0)
+            Vector3 position = new Vector3(x, height + 1.02f, z);
+            float spawnDistSq = (position - new Vector3(0f, 0f, 0f)).sqrMagnitude;
+            if (spawnDistSq < 100f)
+                continue;
+
             if (GetBlock(new Vector3Int(x, height, z)) == 0 ||
                 GetBlock(new Vector3Int(x, height + 1, z)) != 0 ||
                 GetBlock(new Vector3Int(x, height + 2, z)) != 0)
@@ -448,37 +500,31 @@ public sealed class world : MonoBehaviour
 
     private void SpawnNearbyStructures()
     {
-        WorldStructures.CollectNearbyDungeons(playerTransform.position, 2, nearbyDungeons);
+        WorldStructures.CollectNearbyDungeons(playerTransform.position, 3, nearbyDungeons);
         foreach (Vector3 location in nearbyDungeons)
         {
-            Vector2Int key = new Vector2Int(Mathf.RoundToInt(location.x), Mathf.RoundToInt(location.z));
+            Vector2Int key = new Vector2Int(
+                Mathf.FloorToInt(location.x),
+                Mathf.FloorToInt(location.z));
             if (activatedDungeons.Contains(key) ||
-                Vector3.Distance(playerTransform.position, location) > 38f)
+                Vector2.Distance(
+                    new Vector2(playerTransform.position.x, playerTransform.position.z),
+                    new Vector2(location.x, location.z)) > 38f)
                 continue;
 
-            if (CountMobs<witches>() < MaximumWitches)
-            {
-                Vector3 witchPos = GetWitchSpawnPositionInsideDungeon(location);
-                if (witchPos != Vector3.zero)
-                {
-                    witches dungeonWitch = CreateMob<witches>(
-                        "Dungeon witch",
-                        witchPos,
-                        false);
-                    dungeonWitch.SetDungeonExit(
-                        location + Vector3.back * 7f,
-                        location + Vector3.back * 10.5f);
-                }
-            }
+            if (CountMobs<witches>() >= MaximumWitches)
+                continue;
 
-            int availableZombieSlots = MaximumZombies - CountMobs<zombies>();
-            int dungeonZombies = Mathf.Min(DungeonZombieCount, availableZombieSlots);
-            for (int i = 0; i < dungeonZombies; i++)
+            Vector3 witchPos = GetWitchSpawnPositionInsideDungeon(location);
+            if (witchPos != Vector3.zero)
             {
-                Vector3 offset = new Vector3((i % 3 - 1) * 1.3f, 0f, (i / 3 - 1) * 1.3f);
-                CreateMob<zombies>("Dungeon zombie", location + offset, false);
+                witches dungeonWitch = CreateMob<witches>(
+                    "Dungeon witch",
+                    witchPos,
+                    false);
+                dungeonWitch.dungeonCenter = location;
+                activatedDungeons.Add(key);
             }
-            activatedDungeons.Add(key);
         }
     }
 
@@ -490,19 +536,41 @@ public sealed class world : MonoBehaviour
         {
             isRedMoon = redMoon;
             if (moonLight != null)
-                moonLight.color = isRedMoon ? new Color(0.9f, 0.16f, 0.18f) : new Color(1f, 0.94f, 0.82f);
+                moonLight.color = isRedMoon ? new Color(0.8f, 0.1f, 0.15f) : new Color(1f, 0.94f, 0.82f);
             RenderSettings.ambientLight = isRedMoon
-                    ? new Color(0.28f, 0.09f, 0.11f)
-                    : new Color(0.32f, 0.35f, 0.4f);
+                    ? new Color(0.2f, 0.05f, 0.07f) : new Color(0.32f, 0.35f, 0.4f); // Blood red ambient during red moon
             if (gameAudio != null)
                 gameAudio.SetRedMoon(isRedMoon);
             if (isRedMoon)
             {
                 pumpkinSpawnTimer = PumpkinSpawnInterval;
-                InteractionStatus = "Blood moon rises. Ghouls and explosive pumpkins are hunting.";
+                zombieSpawnTimer = 0f; // Spawn extra zombies during blood moon
+                InteractionStatus = "Blood moon rises. Ghouls and the dead are hunting.";
+                // Spawn extra mobs during blood moon
+                for (int i = 0; i < 5; i++)
+                {
+                    float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+                    float distance = UnityEngine.Random.Range(10f, 20f);
+                    int x = Mathf.RoundToInt(playerTransform.position.x + Mathf.Cos(angle) * distance);
+                    int z = Mathf.RoundToInt(playerTransform.position.z + Mathf.Sin(angle) * distance);
+                    int height = GetHeight(x, z);
+                    CreateMob<zombies>("Blood moon zombie", new Vector3(x, height + 1.02f, z), false);
+                }
+                // Show how long until blood moon ends
+                int bloodMoonSecondsLeft = Mathf.CeilToInt(
+                    Mathf.Max(0f, RedMoonDuration - (Time.timeSinceLevelLoad % RedMoonDuration)));
+                InteractionStatus = "Blood moon rises. Ghouls and the dead are hunting. Blood moon ends in " + bloodMoonSecondsLeft + "s";
             }
             else
-                InteractionStatus = "The blood moon has passed.";
+            {
+                ClearMobs();
+                postBloodMoonSpawnTimer = PostBloodMoonSpawnPause;
+                zombieSpawnTimer = 0f;
+                // Show how long until next blood moon
+                int secondsUntilBloodMoon = Mathf.CeilToInt(
+                    Mathf.Max(0f, RedMoonCycle - RedMoonDuration - (Time.timeSinceLevelLoad % RedMoonCycle)));
+                InteractionStatus = "Blood moon will rise in " + secondsUntilBloodMoon + "s. Aim at a block to edit it.";
+            }
         }
 
         float weatherCycleTime = Time.timeSinceLevelLoad % WeatherCycle;
@@ -559,17 +627,30 @@ public sealed class world : MonoBehaviour
             if (moonLight != null)
                 moonLight.intensity = 0.85f;
         }
+
+        if (isRedMoon)
+        {
+            RenderSettings.ambientLight = Color.Lerp(
+                RenderSettings.ambientLight,
+                new Color(0.42f, 0.055f, 0.075f),
+                0.8f);
+        }
+
+        if (moonLight != null)
+            moonLight.color = isRedMoon
+                ? new Color(0.9f, 0.16f, 0.18f)
+                : new Color(0.6f, 0.7f, 0.8f);
     }
 
     public void OnMobKilled(hostileMob mob)
     {
         int coins = 0;
-        if (mob is zombies && UnityEngine.Random.value < 0.25f)
-            coins = 1;
+        if (mob is zombies)
+            coins = UnityEngine.Random.Range(1, 3);
         else if (mob is witches)
-            coins = UnityEngine.Random.Range(2, 6);
+            coins = UnityEngine.Random.Range(3, 8);
         else if (mob is ghouls)
-            coins = UnityEngine.Random.Range(2, 9);
+            coins = UnityEngine.Random.Range(3, 11);
 
         if (coins <= 0)
             return;
@@ -582,6 +663,17 @@ public sealed class world : MonoBehaviour
             playerInventory,
             ItemTypes.SilverCoin,
             coins);
+    }
+
+    private void ClearMobs()
+    {
+        foreach (hostileMob mob in mobs)
+        {
+            if (mob != null)
+                Destroy(mob.gameObject);
+        }
+
+        mobs.Clear();
     }
 
     public int ApplyReversePotion(Vector3 center, float radius, float duration)
@@ -668,9 +760,10 @@ public sealed class world : MonoBehaviour
         return Path.Combine(saveDirectory, "chunk_" + coordinate.x + "_" + coordinate.y + ".json");
     }
 
-    internal int[] LoadChunkBlocks(Vector2Int coordinate, out int saveVersion)
+    internal int[] LoadChunkBlocks(Vector2Int coordinate, out int saveVersion, out bool repaired)
     {
         saveVersion = 0;
+        repaired = false;
         string path = GetChunkSavePath(coordinate);
         if (!File.Exists(path))
             return null;
@@ -689,14 +782,33 @@ public sealed class world : MonoBehaviour
                 return null;
             }
 
+            Dictionary<int, int> invalidBlockCounts = new Dictionary<int, int>();
             for (int i = 0; i < data.blocks.Length; i++)
             {
                 if (data.blocks[i] != 0 && !ItemTypes.IsWorldBlock(data.blocks[i]))
                 {
-                    Debug.LogError("Saved chunk contains an invalid block type: " + path);
-                    saveStatus = "Could not load saved chunk " + coordinate;
-                    return null;
+                    int invalidBlockType = data.blocks[i];
+                    invalidBlockCounts.TryGetValue(invalidBlockType, out int count);
+                    invalidBlockCounts[invalidBlockType] = count + 1;
+                    data.blocks[i] = 0;
+                    repaired = true;
                 }
+            }
+
+            if (repaired)
+            {
+                string invalidTypes = string.Empty;
+                foreach (KeyValuePair<int, int> entry in invalidBlockCounts)
+                {
+                    if (invalidTypes.Length > 0)
+                        invalidTypes += ", ";
+                    invalidTypes += entry.Key + " (" + entry.Value + ")";
+                }
+
+                Debug.LogWarning(
+                    "Replaced invalid saved block types with air in chunk " + coordinate +
+                    " [" + invalidTypes + "]: " + path);
+                saveStatus = "Repaired invalid blocks in chunk " + coordinate;
             }
 
             saveVersion = data.version;
@@ -809,11 +921,41 @@ public sealed class world : MonoBehaviour
         }
     }
 
-    internal int GetHeight(int x, int z)
+internal int GetHeight(int x, int z)
     {
-        float broad = Mathf.PerlinNoise((x + 720f) * 0.035f, (z + 720f) * 0.035f);
-        float detail = Mathf.PerlinNoise((x + 180f) * 0.11f, (z + 180f) * 0.11f);
+        float broad = Mathf.PerlinNoise(((x + WorldSeed) * 0.035f) % 1000f, ((z + WorldSeed) * 0.035f) % 1000f);
+        float detail = Mathf.PerlinNoise(((x + WorldSeed) * 0.11f) % 1000f, ((z + WorldSeed) * 0.11f) % 1000f);
         return Mathf.Clamp(5 + Mathf.RoundToInt(broad * 5f + detail * 2f), 4, WorldHeight - 1);
+    }
+
+    public void ResetWorldWithNewSeed(int newSeed)
+    {
+        WorldSeed = newSeed;
+        // Reset all chunks
+        chunks.Clear();
+        // Reset world state
+        isRedMoon = false;
+        weatherType = WeatherType.Clear;
+        weatherTimer = 0f;
+        // Reset mobs
+        mobs.Clear();
+        postBloodMoonSpawnTimer = 0f;
+        // Reset structure tracking
+        activatedDungeons.Clear();
+        // Reset waypoint hints
+        waypointHints[0] = "Dungeon: locating...";
+        // Reset interaction status
+        interactionStatus = "Aim at a block to edit it";
+        saveStatus = "World reset with new seed " + WorldSeed;
+        
+        // Reset moon light
+        if (moonLight != null)
+            moonLight.color = new Color(1f, 0.94f, 0.82f);
+        RenderSettings.ambientLight = new Color(0.32f, 0.35f, 0.4f);
+        
+        // Reset red moon
+        isRedMoon = false;
+        pumpkinSpawnTimer = PumpkinSpawnInterval;
     }
 
     internal bool SetBlock(Vector3Int position, int blockType)
@@ -904,25 +1046,23 @@ public sealed class world : MonoBehaviour
             (playerCrafting != null && playerCrafting.IsOpen))
             return;
 
-        GUI.color = Color.white;
+GUI.color = Color.white;
         GUI.Box(new Rect(16f, 16f, Mathf.Min(740f, Screen.width - 32f), 300f), "");
         GUI.Label(new Rect(28f, 24f, 280f, 22f), "VOXEL WORLD  |  " + chunks.Count + " loaded chunks");
-        GUI.Label(new Rect(28f, 46f, 260f, 22f), "WASD move  |  Space jump  |  Mouse look");
-        GUI.Label(new Rect(28f, 68f, 280f, 22f), "Left click break  |  Right click place  |  Esc pause");
-        GUI.Label(new Rect(28f, 88f, 280f, 22f), "Chunks stream as you walk  |  F5 save");
-        GUI.Label(new Rect(28f, 108f, 330f, 22f), "1-0 hotbar  |  I inventory  |  C crafting");
-        GUI.Label(new Rect(28f, 130f, 680f, 22f), "B shop  |  O equip armour");
-        GUI.Label(new Rect(28f, 150f, 680f, 22f),
-            isRedMoon
-                ? "BLOOD MOON  |  " + CountMobs<ghouls>() + " ghouls  |  " +
-                  CountMobs<pumpkinBomb>() + " pumpkins"
-                : "Mobs: " + mobs.Count + "  |  Witches: " + CountMobs<witches>());
-        GUI.Label(new Rect(28f, 172f, 680f, 22f), waypointHints[0]);
-        GUI.Label(new Rect(28f, 196f, 700f, 22f),
-            "Dungeon witches exit first and only fire when they can see you.");
-        GUI.Label(new Rect(28f, 220f, 700f, 22f), saveStatus + "  |  " + interactionStatus);
+        float moonCycleTime = Time.timeSinceLevelLoad % RedMoonCycle;
+        float secondsUntilBloodMoon = Mathf.Max(0f, RedMoonCycle - RedMoonDuration - moonCycleTime);
+        GUI.Label(
+            new Rect(28f, 50f, 600f, 22f),
+            "Witches: " + CountMobs<witches>() + "  |  " +
+            (isRedMoon
+                ? "BLOOD MOON  |  " + CountMobs<ghouls>() + " ghouls"
+                : "Blood moon in " + Mathf.CeilToInt(secondsUntilBloodMoon) + "s"));
 
         DrawSurvivalHud();
+
+        // Crossbow controls hint
+        GUI.Label(new Rect(28f, 160f, 300f, 22f),
+            "B shop  |  O equip armour  |  Right click crossbow");
 
         float centerX = Screen.width * 0.5f;
         float centerY = Screen.height * 0.5f;

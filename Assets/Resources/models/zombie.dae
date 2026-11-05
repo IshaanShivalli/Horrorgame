@@ -1,0 +1,267 @@
+<?xml version='1.0' encoding='utf-8'?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor>
+      <authoring_tool>HorrorGame OBJ to Collada conversion</authoring_tool>
+    </contributor>
+    <unit name="meter" meter="1" />
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="zombie-skin-effect" name="skin">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.32 0.46 0.3 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-cloth-effect" name="cloth">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.3 0.2 0.16 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-pants-effect" name="pants">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.12 0.16 0.19 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-eye-effect" name="eye">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.9 0.08 0.04 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-robe-effect" name="robe">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.2 0.08 0.3 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-wing-effect" name="wing">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.22 0.1 0.18 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-wood-effect" name="wood">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.24 0.15 0.08 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-stone-effect" name="stone">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.32 0.34 0.38 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+    <effect id="zombie-metal-effect" name="metal">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <diffuse>
+              <color sid="diffuse">0.72 0.79 0.85 1</color>
+            </diffuse>
+            <transparent opaque="A_ONE">
+              <color>1 1 1 1</color>
+            </transparent>
+            <transparency>
+              <float>1</float>
+            </transparency>
+          </lambert>
+        </technique>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_materials>
+    <material id="zombie-skin" name="skin">
+      <instance_effect url="#zombie-skin-effect" />
+    </material>
+    <material id="zombie-cloth" name="cloth">
+      <instance_effect url="#zombie-cloth-effect" />
+    </material>
+    <material id="zombie-pants" name="pants">
+      <instance_effect url="#zombie-pants-effect" />
+    </material>
+    <material id="zombie-eye" name="eye">
+      <instance_effect url="#zombie-eye-effect" />
+    </material>
+    <material id="zombie-robe" name="robe">
+      <instance_effect url="#zombie-robe-effect" />
+    </material>
+    <material id="zombie-wing" name="wing">
+      <instance_effect url="#zombie-wing-effect" />
+    </material>
+    <material id="zombie-wood" name="wood">
+      <instance_effect url="#zombie-wood-effect" />
+    </material>
+    <material id="zombie-stone" name="stone">
+      <instance_effect url="#zombie-stone-effect" />
+    </material>
+    <material id="zombie-metal" name="metal">
+      <instance_effect url="#zombie-metal-effect" />
+    </material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="zombie-geometry" name="zombie">
+      <mesh>
+        <source id="zombie-positions">
+          <float_array id="zombie-positions-array" count="192">-0.31 0.625 -0.2 0.31 0.625 -0.2 0.31 1.475 -0.2 -0.31 1.475 -0.2 -0.31 0.625 0.2 0.31 0.625 0.2 0.31 1.475 0.2 -0.31 1.475 0.2 -0.24 1.58 -0.225 0.24 1.58 -0.225 0.24 2.08 -0.225 -0.24 2.08 -0.225 -0.24 1.58 0.225 0.24 1.58 0.225 0.24 2.08 0.225 -0.24 2.08 0.225 -0.54 0.78 -0.125 -0.3 0.78 -0.125 -0.3 1.58 -0.125 -0.54 1.58 -0.125 -0.54 0.78 0.125 -0.3 0.78 0.125 -0.3 1.58 0.125 -0.54 1.58 0.125 0.3 0.78 -0.125 0.54 0.78 -0.125 0.54 1.58 -0.125 0.3 1.58 -0.125 0.3 0.78 0.125 0.54 0.78 0.125 0.54 1.58 0.125 0.3 1.58 0.125 -0.3 0.02 -0.14 -0.04 0.02 -0.14 -0.04 0.72 -0.14 -0.3 0.72 -0.14 -0.3 0.02 0.14 -0.04 0.02 0.14 -0.04 0.72 0.14 -0.3 0.72 0.14 0.04 0.02 -0.14 0.3 0.02 -0.14 0.3 0.72 -0.14 0.04 0.72 -0.14 0.04 0.02 0.14 0.3 0.02 0.14 0.3 0.72 0.14 0.04 0.72 0.14 -0.15 1.84 0.205 -0.07 1.84 0.205 -0.07 1.92 0.205 -0.15 1.92 0.205 -0.15 1.84 0.255 -0.07 1.84 0.255 -0.07 1.92 0.255 -0.15 1.92 0.255 0.07 1.84 0.205 0.15 1.84 0.205 0.15 1.92 0.205 0.07 1.92 0.205 0.07 1.84 0.255 0.15 1.84 0.255 0.15 1.92 0.255 0.07 1.92 0.255</float_array>
+          <technique_common>
+            <accessor source="#zombie-positions-array" count="64" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="zombie-normals">
+          <float_array id="zombie-normals-array" count="288">0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0 0 0 -1 0 0 -1 0 0 1 0 0 1 -1 0 0 -1 0 0 1 0 0 1 0 0 0 1 0 0 1 0 0 -1 0 0 -1 0</float_array>
+          <technique_common>
+            <accessor source="#zombie-normals-array" count="96" stride="3">
+              <param name="X" type="float" />
+              <param name="Y" type="float" />
+              <param name="Z" type="float" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="zombie-vertices">
+          <input semantic="POSITION" source="#zombie-positions" />
+        </vertices>
+        <triangles material="zombie-cloth" count="36">
+          <input semantic="NORMAL" source="#zombie-normals" offset="1" />
+          <input semantic="VERTEX" source="#zombie-vertices" offset="0" />
+          <p>0 0 3 0 2 0 0 1 2 1 1 1 4 2 5 2 6 2 4 3 6 3 7 3 0 4 4 4 7 4 0 5 7 5 3 5 1 6 2 6 6 6 1 7 6 7 5 7 3 8 7 8 6 8 3 9 6 9 2 9 0 10 1 10 5 10 0 11 5 11 4 11 16 12 19 12 18 12 16 13 18 13 17 13 20 14 21 14 22 14 20 15 22 15 23 15 16 16 20 16 23 16 16 17 23 17 19 17 17 18 18 18 22 18 17 19 22 19 21 19 19 20 23 20 22 20 19 21 22 21 18 21 16 22 17 22 21 22 16 23 21 23 20 23 24 24 27 24 26 24 24 25 26 25 25 25 28 26 29 26 30 26 28 27 30 27 31 27 24 28 28 28 31 28 24 29 31 29 27 29 25 30 26 30 30 30 25 31 30 31 29 31 27 32 31 32 30 32 27 33 30 33 26 33 24 34 25 34 29 34 24 35 29 35 28 35</p>
+        </triangles>
+        <triangles material="zombie-skin" count="12">
+          <input semantic="NORMAL" source="#zombie-normals" offset="1" />
+          <input semantic="VERTEX" source="#zombie-vertices" offset="0" />
+          <p>8 36 11 36 10 36 8 37 10 37 9 37 12 38 13 38 14 38 12 39 14 39 15 39 8 40 12 40 15 40 8 41 15 41 11 41 9 42 10 42 14 42 9 43 14 43 13 43 11 44 15 44 14 44 11 45 14 45 10 45 8 46 9 46 13 46 8 47 13 47 12 47</p>
+        </triangles>
+        <triangles material="zombie-pants" count="24">
+          <input semantic="NORMAL" source="#zombie-normals" offset="1" />
+          <input semantic="VERTEX" source="#zombie-vertices" offset="0" />
+          <p>32 48 35 48 34 48 32 49 34 49 33 49 36 50 37 50 38 50 36 51 38 51 39 51 32 52 36 52 39 52 32 53 39 53 35 53 33 54 34 54 38 54 33 55 38 55 37 55 35 56 39 56 38 56 35 57 38 57 34 57 32 58 33 58 37 58 32 59 37 59 36 59 40 60 43 60 42 60 40 61 42 61 41 61 44 62 45 62 46 62 44 63 46 63 47 63 40 64 44 64 47 64 40 65 47 65 43 65 41 66 42 66 46 66 41 67 46 67 45 67 43 68 47 68 46 68 43 69 46 69 42 69 40 70 41 70 45 70 40 71 45 71 44 71</p>
+        </triangles>
+        <triangles material="zombie-eye" count="24">
+          <input semantic="NORMAL" source="#zombie-normals" offset="1" />
+          <input semantic="VERTEX" source="#zombie-vertices" offset="0" />
+          <p>48 72 51 72 50 72 48 73 50 73 49 73 52 74 53 74 54 74 52 75 54 75 55 75 48 76 52 76 55 76 48 77 55 77 51 77 49 78 50 78 54 78 49 79 54 79 53 79 51 80 55 80 54 80 51 81 54 81 50 81 48 82 49 82 53 82 48 83 53 83 52 83 56 84 59 84 58 84 56 85 58 85 57 85 60 86 61 86 62 86 60 87 62 87 63 87 56 88 60 88 63 88 56 89 63 89 59 89 57 90 58 90 62 90 57 91 62 91 61 91 59 92 63 92 62 92 59 93 62 93 58 93 56 94 57 94 61 94 56 95 61 95 60 95</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="zombie-scene" name="zombie">
+      <node id="zombie" name="zombie" type="NODE">
+        <instance_geometry url="#zombie-geometry">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="zombie-skin" target="#zombie-skin" />
+              <instance_material symbol="zombie-cloth" target="#zombie-cloth" />
+              <instance_material symbol="zombie-pants" target="#zombie-pants" />
+              <instance_material symbol="zombie-eye" target="#zombie-eye" />
+              <instance_material symbol="zombie-robe" target="#zombie-robe" />
+              <instance_material symbol="zombie-wing" target="#zombie-wing" />
+              <instance_material symbol="zombie-wood" target="#zombie-wood" />
+              <instance_material symbol="zombie-stone" target="#zombie-stone" />
+              <instance_material symbol="zombie-metal" target="#zombie-metal" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#zombie-scene" />
+  </scene>
+</COLLADA>

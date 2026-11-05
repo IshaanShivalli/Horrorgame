@@ -7,6 +7,9 @@ public static class WorldStructures
     private const int DungeonSpacing = 19;
     private const int LegacyGraveyardSpacing = 13;
     private static Material graveMarkerMaterial;
+    private static Material dungeonChestMaterial;
+    private static Material dungeonChestMetalMaterial;
+    private static Material dungeonCrossbowMaterial;
 
     public static bool GenerateChunk(
         world currentWorld,
@@ -17,7 +20,7 @@ public static class WorldStructures
         bool changed = false;
         for (int x = coordinate.x - 1; x <= coordinate.x + 1; x++)
         {
-            for (int z = coordinate.y - 1; z <= coordinate.y + 1; z++)
+            for (int z = coordinate.y - 3; z <= coordinate.y + 1; z++)
             {
                 if (preserveExistingBlocks &&
                     TryGetLegacyGraveyardLocation(x, z, out Vector2Int oldGraveyard))
@@ -95,6 +98,7 @@ public static class WorldStructures
             if (!created)
                 break;
         }
+        CreateDungeonEntranceDecorations(currentWorld, coordinate, parent);
     }
 
     private static bool NearStructure(int worldX, int worldZ)
@@ -147,6 +151,90 @@ public static class WorldStructures
             new Vector3(0f, 0.1f, 0f),
             new Vector3(0.52f, 0.18f, 0.36f),
             graveMarkerMaterial);
+    }
+
+    private static void CreateDungeonEntranceDecorations(
+        world currentWorld,
+        Vector2Int coordinate,
+        Transform parent)
+    {
+        int chunkX = coordinate.x;
+        int chunkZ = coordinate.y;
+        for (int candidateX = chunkX - 2; candidateX <= chunkX + 2; candidateX++)
+        {
+            for (int candidateZ = chunkZ - 2; candidateZ <= chunkZ + 2; candidateZ++)
+            {
+                if (!TryGetLocation(
+                    candidateX, candidateZ, DungeonSpacing, 0x61d3, false, out Vector2Int dungeon))
+                    continue;
+
+                int surfaceY = currentWorld.GetHeight(dungeon.x, dungeon.y);
+                if (surfaceY < 5)
+                    continue;
+
+                int chestZ = dungeon.y;
+                int floorY = surfaceY - 5;
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    int chestX = dungeon.x + side * 2;
+                    int chestChunkX = Mathf.FloorToInt((float)chestX / world.ChunkSize);
+                    int chestChunkZ = Mathf.FloorToInt((float)chestZ / world.ChunkSize);
+                    if (chestChunkX != coordinate.x || chestChunkZ != coordinate.y)
+                        continue;
+
+                    CreateDungeonChestDisplay(
+                        parent,
+                        new Vector3(
+                            chestX - coordinate.x * world.ChunkSize + 0.5f,
+                            floorY + 1.01f,
+                            chestZ - coordinate.y * world.ChunkSize + 0.5f));
+                }
+            }
+        }
+    }
+
+    private static void CreateDungeonChestDisplay(Transform parent, Vector3 localPosition)
+    {
+        dungeonChestMaterial = MobModels.Material(
+            dungeonChestMaterial, "Dungeon chest wood", new Color(0.35f, 0.17f, 0.07f));
+        dungeonChestMetalMaterial = MobModels.Material(
+            dungeonChestMetalMaterial, "Dungeon chest iron", new Color(0.24f, 0.25f, 0.27f));
+        dungeonCrossbowMaterial = MobModels.Material(
+            dungeonCrossbowMaterial, "Dungeon crossbow wood", new Color(0.22f, 0.12f, 0.06f));
+
+        GameObject chest = new GameObject("Dungeon chest and crossbow");
+        chest.transform.SetParent(parent, false);
+        chest.transform.localPosition = localPosition;
+        MobModels.Part(
+            chest.transform, PrimitiveType.Cube, "Chest body",
+            new Vector3(0f, 0.27f, 0f), new Vector3(0.86f, 0.52f, 0.72f), dungeonChestMaterial);
+        MobModels.Part(
+            chest.transform, PrimitiveType.Cube, "Chest lid",
+            new Vector3(0f, 0.57f, 0f), new Vector3(0.9f, 0.12f, 0.76f), dungeonChestMaterial);
+        MobModels.Part(
+            chest.transform, PrimitiveType.Cube, "Chest clasp",
+            new Vector3(0f, 0.38f, 0.37f), new Vector3(0.12f, 0.2f, 0.04f), dungeonChestMetalMaterial);
+
+        GameObject crossbow = new GameObject("Crossbow");
+        crossbow.transform.SetParent(chest.transform, false);
+        crossbow.transform.localPosition = new Vector3(0f, 0.68f, 0f);
+        MobModels.Part(
+            crossbow.transform, PrimitiveType.Cube, "Crossbow stock",
+            new Vector3(0f, 0.04f, 0f), new Vector3(0.12f, 0.1f, 0.58f), dungeonCrossbowMaterial);
+        GameObject leftLimb = MobModels.Part(
+            crossbow.transform, PrimitiveType.Cube, "Crossbow left limb",
+            new Vector3(-0.25f, 0.06f, -0.12f), new Vector3(0.46f, 0.07f, 0.08f),
+            dungeonCrossbowMaterial);
+        leftLimb.transform.localRotation = Quaternion.Euler(0f, 0f, -12f);
+        GameObject rightLimb = MobModels.Part(
+            crossbow.transform, PrimitiveType.Cube, "Crossbow right limb",
+            new Vector3(0.25f, 0.06f, -0.12f), new Vector3(0.46f, 0.07f, 0.08f),
+            dungeonCrossbowMaterial);
+        rightLimb.transform.localRotation = Quaternion.Euler(0f, 0f, 12f);
+        MobModels.Part(
+            crossbow.transform, PrimitiveType.Cube, "Crossbow string",
+            new Vector3(0f, 0.09f, -0.12f), new Vector3(0.5f, 0.025f, 0.025f),
+            dungeonChestMetalMaterial);
     }
 
     private static Vector2Int GetGraveyardLocation(int chunkX, int chunkZ, int hash)
@@ -225,6 +313,12 @@ public static class WorldStructures
             return true;
         }
 
+        if (!hut && chunkX == 0 && chunkZ == 0)
+        {
+            location = new Vector2Int(8, 8);
+            return true;
+        }
+
         unchecked
         {
             int hash = chunkX * 73856093 ^ chunkZ * 19349663 ^ salt;
@@ -299,136 +393,270 @@ public static class WorldStructures
         Vector2Int center,
         bool preserveExistingBlocks)
     {
-        int floorY = currentWorld.GetHeight(center.x, center.y);
-        if (preserveExistingBlocks &&
-            !CanPlaceOnNaturalGround(currentWorld, chunkCoordinate, blocks, center, 8, floorY + 6))
+        int surfaceY = currentWorld.GetHeight(center.x, center.y);
+        if (surfaceY < 5)
             return false;
 
         bool changed = false;
-        CreateCorridorRoomSystem(chunkCoordinate, blocks, center, floorY, ref changed, 5);
+        // Always create dungeon entrance - force generation
+        CreateDungeonEntrance(currentWorld, chunkCoordinate, blocks, center, surfaceY, ref changed);
+
+        int entranceZ = center.y - 6;
+        CreateRoomEntryHall(currentWorld, chunkCoordinate, blocks, center, surfaceY, ref changed, entranceZ);
+        CreateCorridorRandom(currentWorld, chunkCoordinate, blocks, center, surfaceY, entranceZ, ref changed, 1);
+        CreateRoomGuardChamber(currentWorld, chunkCoordinate, blocks, center, surfaceY, ref changed, entranceZ);
+        CreateCorridorRandom(currentWorld, chunkCoordinate, blocks, center, surfaceY, entranceZ, ref changed, 2);
+        CreateRoomTreasury(currentWorld, chunkCoordinate, blocks, center, surfaceY, ref changed, entranceZ);
+        CreateCorridorRandom(currentWorld, chunkCoordinate, blocks, center, surfaceY, entranceZ, ref changed, 3);
+        CreateRoomCrypt(currentWorld, chunkCoordinate, blocks, center, surfaceY, ref changed, entranceZ);
+        CreateCorridorRandom(currentWorld, chunkCoordinate, blocks, center, surfaceY, entranceZ, ref changed, 4);
+        CreateRoomBossArena(currentWorld, chunkCoordinate, blocks, center, surfaceY, ref changed, entranceZ);
+
         return changed;
     }
 
-    private static void CreateCorridorRoomSystem(
+    private static void CreateDungeonEntrance(
+        world currentWorld,
         Vector2Int chunkCoordinate,
         int[,,] blocks,
         Vector2Int center,
-        int floorY,
-        ref bool changed,
-        int maxRooms)
+        int surfaceY,
+        ref bool changed)
     {
-        int roomSize = 5;
-        int corridorWidth = 2;
-        int roomsCreated = 0;
-        Vector2Int currentRoomCenter = center;
+        int entranceZ = center.y - 6;
+        for (int x = center.x - 2; x <= center.x + 2; x++)
+            changed |= SetBlock(chunkCoordinate, blocks, x, surfaceY + 4, entranceZ, ItemTypes.Stone);
 
-        for (int room = 0; room < maxRooms; room++)
+        for (int y = surfaceY + 1; y <= surfaceY + 3; y++)
         {
-            if (room > 0)
-            {
-                CreateCorridor(chunkCoordinate, blocks, currentRoomCenter, center, corridorWidth, floorY, ref changed);
-                currentRoomCenter = new Vector2Int(
-                    currentRoomCenter.x + UnityEngine.Random.Range(-3, 3),
-                    currentRoomCenter.y + UnityEngine.Random.Range(-3, 3));
-            }
-
-            int roomXMin = currentRoomCenter.x - roomSize;
-            int roomXMax = currentRoomCenter.x + roomSize;
-            int roomYMin = currentRoomCenter.y - roomSize;
-            int roomYMax = currentRoomCenter.y + roomSize;
-
-            for (int x = roomXMin; x <= roomXMax; x++)
-            {
-                for (int y = roomYMin; y <= roomYMax; y++)
-                {
-                    for (int z = floorY; z <= floorY + 5; z++)
-                    {
-                        changed |= SetBlock(chunkCoordinate, blocks, center.x + x, z, center.y + y, ItemTypes.Stone);
-                    }
-                }
-            }
-
-            roomsCreated++;
-            if (room >= maxRooms - 1)
-                break;
-
-            bool validDirection = false;
-            int attempt = 0;
-            while (!validDirection && attempt < 8)
-            {
-                int direction = UnityEngine.Random.Range(0, 4);
-                int dx = 0, dz = 0;
-                switch (direction)
-                {
-                    case 0: dx = roomSize + corridorWidth; break;
-                    case 1: dx = -(roomSize + corridorWidth); break;
-                    case 2: dz = roomSize + corridorWidth; break;
-                    case 3: dz = -(roomSize + corridorWidth); break;
-                }
-
-                bool overlap = false;
-                for (int r = 0; r < room; r++)
-                {
-                    Vector2Int prevRoom = new Vector2Int(
-                        UnityEngine.Random.Range(-3, 3),
-                        UnityEngine.Random.Range(-3, 3));
-                    Vector2Int checkPos = new Vector2Int(currentRoomCenter.x + dx, currentRoomCenter.y + dz);
-                    if ((prevRoom - checkPos).sqrMagnitude < 25)
-                    {
-                        overlap = true;
-                        break;
-                    }
-                }
-                if (!overlap)
-                {
-                    validDirection = true;
-                    center = new Vector2Int(center.x + dx, center.y + dz);
-                }
-                attempt++;
-            }
-            if (!validDirection) break;
+            changed |= SetBlock(chunkCoordinate, blocks, center.x - 2, y, entranceZ, ItemTypes.Stone);
+            changed |= SetBlock(chunkCoordinate, blocks, center.x + 2, y, entranceZ, ItemTypes.Stone);
         }
 
-        for (int i = 0; i < 4; i++)
+        for (int step = 1; step <= 4; step++)
         {
-            changed |= SetBlock(chunkCoordinate, blocks, center.x + (i % 2 == 0 ? i / 2 : -(i / 2)), floorY + 1, center.y + (i >= 2 ? i - 2 : 0), ItemTypes.Torch);
+            int z = entranceZ + step;
+            int floorY = surfaceY - step;
+            for (int x = center.x - 1; x <= center.x + 1; x++)
+            {
+                changed |= SetBlock(chunkCoordinate, blocks, x, floorY, z, ItemTypes.Stone);
+                for (int y = floorY + 1; y <= surfaceY + 3; y++)
+                    changed |= SetBlock(chunkCoordinate, blocks, x, y, z, 0);
+            }
+
+            for (int y = floorY + 1; y <= surfaceY + 2; y++)
+            {
+                changed |= SetBlock(chunkCoordinate, blocks, center.x - 2, y, z, ItemTypes.Stone);
+                changed |= SetBlock(chunkCoordinate, blocks, center.x + 2, y, z, ItemTypes.Stone);
+            }
+        }
+
+        for (int x = center.x - 1; x <= center.x + 1; x++)
+        {
+            for (int y = surfaceY + 1; y <= surfaceY + 3; y++)
+                changed |= SetBlock(chunkCoordinate, blocks, x, y, entranceZ, 0);
+        }
+        changed |= SetBlock(chunkCoordinate, blocks, center.x - 2, surfaceY + 2, entranceZ + 1, ItemTypes.Torch);
+        changed |= SetBlock(chunkCoordinate, blocks, center.x + 2, surfaceY + 2, entranceZ + 1, ItemTypes.Torch);
+    }
+
+    private static void CreateCorridorRandom(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY,
+        int entranceZ,
+        ref bool changed,
+        int roomNum)
+    {
+        int[] roomOffsets = { 7, 18, 29, 40, 51 };
+        int[] roomDepths = { 2, 4, 4, 4, 6 };
+        int startZ = entranceZ + roomOffsets[roomNum - 1] + roomDepths[roomNum - 1];
+        int endZ = entranceZ + roomOffsets[roomNum] - roomDepths[roomNum];
+        int seed = unchecked(center.x * 73856093 ^ center.y * 19349663 ^ roomNum * 83492791);
+        System.Random random = new System.Random(seed);
+        int bendX = center.x + random.Next(-3, 4);
+        int bendZ = Mathf.Clamp((startZ + endZ) / 2 + random.Next(-1, 2), startZ, endZ);
+
+        for (int z = startZ; z <= endZ; z++)
+            CreateCorridorCell(chunkCoordinate, blocks, center.x, z, surfaceY, ref changed);
+        for (int x = Mathf.Min(center.x, bendX); x <= Mathf.Max(center.x, bendX); x++)
+            CreateCorridorCell(chunkCoordinate, blocks, x, bendZ, surfaceY, ref changed);
+        for (int z = bendZ; z <= endZ; z++)
+            CreateCorridorCell(chunkCoordinate, blocks, bendX, z, surfaceY, ref changed);
+        for (int x = Mathf.Min(center.x, bendX); x <= Mathf.Max(center.x, bendX); x++)
+            CreateCorridorCell(chunkCoordinate, blocks, x, endZ, surfaceY, ref changed);
+    }
+
+    private static void CreateCorridorCell(
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        int centerX,
+        int z,
+        int surfaceY,
+        ref bool changed)
+    {
+        int floorY = surfaceY - 5;
+        for (int x = centerX - 1; x <= centerX + 1; x++)
+        {
+            changed |= SetBlock(chunkCoordinate, blocks, x, floorY, z, ItemTypes.Stone);
+            for (int y = floorY + 1; y <= surfaceY - 2; y++)
+                changed |= SetBlock(chunkCoordinate, blocks, x, y, z, 0);
+        }
+
+        for (int y = floorY + 1; y <= surfaceY - 2; y++)
+        {
+            changed |= SetBlock(chunkCoordinate, blocks, centerX - 2, y, z, ItemTypes.Stone);
+            changed |= SetBlock(chunkCoordinate, blocks, centerX + 2, y, z, ItemTypes.Stone);
+        }
+        changed |= SetBlock(chunkCoordinate, blocks, centerX, surfaceY - 1, z, ItemTypes.Stone);
+    }
+
+    private static void CreateRoomEntryHall(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY,
+        ref bool changed,
+        int entranceZ)
+    {
+        CreateDungeonRoom(
+            chunkCoordinate, blocks, center.x, entranceZ + 7, 3, 2, surfaceY, true, ref changed);
+    }
+
+    private static void CreateRoomGuardChamber(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY,
+        ref bool changed,
+        int entranceZ)
+    {
+        CreateDungeonRoom(
+            chunkCoordinate, blocks, center.x, entranceZ + 18, 4, 4, surfaceY, true, ref changed);
+        changed |= SetBlock(
+            chunkCoordinate, blocks, center.x - 3, surfaceY - 3, entranceZ + 18, ItemTypes.Torch);
+        changed |= SetBlock(
+            chunkCoordinate, blocks, center.x + 3, surfaceY - 3, entranceZ + 18, ItemTypes.Torch);
+    }
+
+    private static void CreateRoomTreasury(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY,
+        ref bool changed,
+        int entranceZ)
+    {
+        int roomZ = entranceZ + 29;
+        CreateDungeonRoom(chunkCoordinate, blocks, center.x, roomZ, 4, 4, surfaceY, true, ref changed);
+        changed |= SetBlock(chunkCoordinate, blocks, center.x, surfaceY - 3, roomZ, ItemTypes.CraftingTable);
+    }
+
+    private static void CreateRoomCrypt(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY,
+        ref bool changed,
+        int entranceZ)
+    {
+        int roomZ = entranceZ + 40;
+        CreateDungeonRoom(chunkCoordinate, blocks, center.x, roomZ, 4, 4, surfaceY, true, ref changed);
+        for (int offset = -2; offset <= 2; offset += 4)
+            changed |= SetBlock(
+                chunkCoordinate, blocks, center.x + offset, surfaceY - 3, roomZ, ItemTypes.Stone);
+    }
+
+    private static void CreateRoomBossArena(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY,
+        ref bool changed,
+        int entranceZ)
+    {
+        int roomZ = entranceZ + 51;
+        CreateDungeonRoom(chunkCoordinate, blocks, center.x, roomZ, 6, 6, surfaceY, false, ref changed);
+        for (int xOffset = -3; xOffset <= 3; xOffset += 6)
+        {
+            for (int zOffset = -3; zOffset <= 3; zOffset += 6)
+            {
+                for (int y = surfaceY - 3; y <= surfaceY - 2; y++)
+                    changed |= SetBlock(
+                        chunkCoordinate, blocks, center.x + xOffset, y, roomZ + zOffset, ItemTypes.Stone);
+            }
         }
     }
 
-    private static void CreateCorridor(
+    private static void CreateDungeonRoom(
         Vector2Int chunkCoordinate,
         int[,,] blocks,
-        Vector2Int fromRoom,
-        Vector2Int toRoom,
-        int width,
-        int floorY,
+        int centerX,
+        int centerZ,
+        int radiusX,
+        int radiusZ,
+        int surfaceY,
+        bool hasForwardExit,
         ref bool changed)
     {
-        int startX = fromRoom.x;
-        int startY = fromRoom.y;
-        int endX = toRoom.x;
-        int endY = toRoom.y;
-
-        int dx = (int)Mathf.Sign(endX - startX);
-        int dy = (int)Mathf.Sign(endY - startY);
-
-        int x = startX;
-        int y = startY;
-
-        while ((dx > 0 && x <= endX) || (dx < 0 && x >= endX) || (dx == 0) ||
-               (dy > 0 && y <= endY) || (dy < 0 && y >= endY) || (dy == 0))
+        int floorY = surfaceY - 5;
+        int ceilingY = surfaceY - 1;
+        for (int xOffset = -radiusX; xOffset <= radiusX; xOffset++)
         {
-            for (int wy = floorY; wy <= floorY + 5; wy++)
+            for (int zOffset = -radiusZ; zOffset <= radiusZ; zOffset++)
             {
-                for (int wy2 = y - width/2; wy2 <= y + width/2; wy2++)
+                changed |= SetBlock(
+                    chunkCoordinate, blocks, centerX + xOffset, floorY, centerZ + zOffset, ItemTypes.Stone);
+                changed |= SetBlock(
+                    chunkCoordinate, blocks, centerX + xOffset, ceilingY, centerZ + zOffset, ItemTypes.Stone);
+
+                bool wall = Mathf.Abs(xOffset) == radiusX || Mathf.Abs(zOffset) == radiusZ;
+                bool doorway = Mathf.Abs(xOffset) <= 1 &&
+                    (zOffset == -radiusZ || (hasForwardExit && zOffset == radiusZ));
+                for (int y = floorY + 1; y < ceilingY; y++)
                 {
-                    changed |= SetBlock(chunkCoordinate, blocks, x - chunkCoordinate.x, wy, wy2 - chunkCoordinate.y, ItemTypes.Stone);
+                    int block = wall && !doorway ? ItemTypes.Stone : 0;
+                    changed |= SetBlock(
+                        chunkCoordinate, blocks, centerX + xOffset, y, centerZ + zOffset, block);
                 }
             }
-
-            if (x != endX) x += dx;
-            if (y != endY) y += dy;
         }
+    }
+
+    private static bool HasLegacyDungeon(
+        world currentWorld,
+        Vector2Int chunkCoordinate,
+        int[,,] blocks,
+        Vector2Int center,
+        int surfaceY)
+    {
+        int chunkMinX = chunkCoordinate.x * world.ChunkSize;
+        int chunkMinZ = chunkCoordinate.y * world.ChunkSize;
+        int cleared = 0;
+        for (int x = Mathf.Max(center.x - 13, chunkMinX); x <= Mathf.Min(center.x + 13, chunkMinX + world.ChunkSize - 1); x++)
+        {
+            for (int z = Mathf.Max(center.y - 13, chunkMinZ); z <= Mathf.Min(center.y + 13, chunkMinZ + world.ChunkSize - 1); z++)
+            {
+                int groundY = currentWorld.GetHeight(x, z);
+                for (int y = Mathf.Max(groundY, surfaceY); y <= surfaceY + 5 && y < world.WorldHeight; y++)
+                {
+                    if (GetBlock(blocks, x - chunkMinX, y, z - chunkMinZ) != ItemTypes.Stone)
+                        continue;
+
+                    int replacement = y == groundY ? ItemTypes.Grass : 0;
+                    if (SetBlock(chunkCoordinate, blocks, x, y, z, replacement))
+                        cleared++;
+                }
+            }
+        }
+        return cleared > 0;
     }
 
     private static bool ClearLegacyCemetery(

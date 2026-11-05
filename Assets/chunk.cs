@@ -14,6 +14,7 @@ public sealed class chunk
     private readonly world world;
     private readonly int[,,] blocks = new int[global::world.ChunkSize, global::world.WorldHeight, global::world.ChunkSize];
     private readonly List<Vector3Int> treeTrunks = new List<Vector3Int>();
+    private readonly Dictionary<Vector2Int, GameObject> treeFoliage = new Dictionary<Vector2Int, GameObject>();
     private readonly List<GameObject> torchModels = new List<GameObject>();
     private readonly GameObject gameObject;
     private readonly MeshFilter meshFilter;
@@ -52,10 +53,10 @@ public sealed class chunk
             }
         }
 
-        treeTrunks.AddRange(Trees.Generate(world, coordinate, blocks, gameObject.transform));
+        treeTrunks.AddRange(Trees.Generate(world, coordinate, blocks, gameObject.transform, treeFoliage));
         WorldStructures.GenerateChunk(world, coordinate, blocks);
 
-        int[] savedBlocks = world.LoadChunkBlocks(coordinate, out int saveVersion);
+        int[] savedBlocks = world.LoadChunkBlocks(coordinate, out int saveVersion, out bool repaired);
         if (savedBlocks != null)
         {
             LoadBlocks(savedBlocks);
@@ -65,11 +66,14 @@ public sealed class chunk
                     blocks[trunkBlock.x, trunkBlock.y, trunkBlock.z] = ItemTypes.Log;
             }
 
-            if (saveVersion < world.CurrentChunkSaveVersion)
+            if (repaired || saveVersion < world.CurrentChunkSaveVersion)
             {
-                WorldStructures.GenerateChunk(world, coordinate, blocks, true);
                 isDirty = true;
+                if (saveVersion < world.CurrentChunkSaveVersion)
+                    WorldStructures.GenerateChunk(world, coordinate, blocks, true);
             }
+
+            DecayFoliageForMissingTrunks();
         }
 
         WorldStructures.CreateChunkGraveModels(world, coordinate, gameObject.transform);
@@ -85,13 +89,36 @@ public sealed class chunk
         if (blocks[x, y, z] == blockType)
             return true;
 
+        int previousBlockType = blocks[x, y, z];
         blocks[x, y, z] = blockType;
         isDirty = true;
+        if (previousBlockType == ItemTypes.Log && blockType != ItemTypes.Log)
+            DecayTreeFoliageAt(x, z);
         if (blockType != 0 && y > highestBlockY)
             highestBlockY = y;
         else if (blockType == 0 && y == highestBlockY)
             RecalculateHighestBlockY();
         return true;
+    }
+
+    private void DecayFoliageForMissingTrunks()
+    {
+        foreach (Vector3Int trunk in treeTrunks)
+        {
+            if (blocks[trunk.x, trunk.y, trunk.z] != ItemTypes.Log)
+                DecayTreeFoliageAt(trunk.x, trunk.z);
+        }
+    }
+
+    private void DecayTreeFoliageAt(int x, int z)
+    {
+        Vector2Int treePosition = new Vector2Int(x, z);
+        if (!treeFoliage.TryGetValue(treePosition, out GameObject foliage))
+            return;
+
+        treeFoliage.Remove(treePosition);
+        if (foliage != null)
+            UnityEngine.Object.Destroy(foliage, 5f);
     }
 
     public int GetBlock(int x, int y, int z)
